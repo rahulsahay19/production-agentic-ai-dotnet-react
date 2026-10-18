@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Manrope", "Segoe UI", sans-serif;
+  --font-display: "Space Grotesk", "Segoe UI", sans-serif;
+  --color-ink-950: #06101f;
+  --color-ink-900: #09182b;
+  --color-ink-800: #10233c;
+  --color-electric-300: #6fe7ff;
+  --color-electric-400: #23c7f5;
+  --color-electric-500: #009ddd;
+  --color-violet-400: #9d7bff;
+  --color-lime-300: #b9f36b;
+  --shadow-glow: 0 0 50px rgba(35, 199, 245, 0.2);
+}
+
+@layer base {
+  :root { color: #eaf4ff; background: #06101f; font-synthesis: none; text-rendering: optimizeLegibility; }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; min-width: 320px; min-height: 100vh; background: #06101f; }
+  button, a, input, select { -webkit-tap-highlight-color: transparent; }
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #6fe7ff; outline-offset: 3px; }
+  ::selection { color: #06101f; background: #6fe7ff; }
+}
+
+@layer utilities {
+  .page-shell { @apply mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-10; }
+  .glass { @apply border border-white/10 bg-white/[0.055] backdrop-blur-xl; }
+  .text-balance { text-wrap: balance; }
+  .gradient-text { background: linear-gradient(100deg, #fff 5%, #6fe7ff 48%, #b69aff 95%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .grid-fade { background-image: linear-gradient(rgba(111,231,255,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(111,231,255,.055) 1px,transparent 1px); background-size:48px 48px; mask-image:linear-gradient(to bottom,black 35%,transparent 95%); }
+}
+
+@keyframes float { 0%,100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-12px) rotate(1deg); } }
+@keyframes pulse-soft { 0%,100% { opacity:.45; transform:scale(1); } 50% { opacity:.8; transform:scale(1.08); } }
+.animate-float { animation: float 6s ease-in-out infinite; }
+.animate-pulse-soft { animation: pulse-soft 5s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { *,*::before,*::after { scroll-behavior:auto!important; animation-duration:.01ms!important; } }

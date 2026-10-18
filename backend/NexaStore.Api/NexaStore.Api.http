@@ -1,0 +1,20 @@
+@NexaStore.Api_HostAddress = http://localhost:5175
+
+GET {{NexaStore.Api_HostAddress}}/api/products
+Accept: application/json
+
+###
+
+GET {{NexaStore.Api_HostAddress}}/api/products/search?ramMin=64&vramMin=16&aiReady=true
+Accept: application/json
+
+###
+
+GET {{NexaStore.Api_HostAddress}}/api/categories
+Accept: application/json
+
+###
+
+GET {{NexaStore.Api_HostAddress}}/health
+
+###

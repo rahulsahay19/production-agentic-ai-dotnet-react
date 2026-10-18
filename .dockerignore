@@ -1,0 +1,9 @@
+**/bin
+**/obj
+.git
+.dotnet-cli
+.vs
+.vscode
+frontend/nexastore-web/node_modules
+frontend/nexastore-web/dist
+tests

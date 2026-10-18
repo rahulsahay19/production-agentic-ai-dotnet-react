@@ -1,0 +1,14 @@
+.dotnet-cli/
+**/bin/
+**/obj/
+.vs/
+.vscode/
+*.user
+*.suo
+
+frontend/nexastore-web/node_modules/
+frontend/nexastore-web/dist/
+
+.env
+.env.*
+!.env.example
