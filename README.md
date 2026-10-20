@@ -3,10 +3,21 @@
 **Computing for Developers, Creators & AI Builders**
 
 NexaStore is a production-oriented .NET 10 modular-monolith e-commerce
-application that will evolve incrementally into an agentic AI reference
-platform. The current application provides a complete commerce API and a
-responsive React storefront. AI, RAG, MCP, agents, and vector search remain
-intentionally reserved for a later phase.
+application that evolves incrementally into an agentic AI reference platform.
+The current application combines the conventional commerce foundation with a
+provider-neutral local conversational AI integration powered by Ollama. RAG,
+tools, MCP, and agents remain intentionally reserved for later phases.
+
+## Phase 02: local LLM
+
+- `Microsoft.Extensions.AI.IChatClient` provider abstraction
+- Ollama local model integration
+- Server-Sent Events streaming API
+- Multi-turn React assistant experience with cancellation
+- Server-owned safety and capability-boundary prompt
+- Docker-managed model provisioning and persistent model storage
+
+See [local AI documentation](docs/local-ai.md) for configuration, model selection, and manual verification.
 
 ## Backend status
 
@@ -43,6 +54,7 @@ docker compose up -d --build
 - Storefront: `http://localhost:5173`
 - API and Swagger: `http://localhost:5175`
 - PostgreSQL: `localhost:5432`
+- Ollama: `http://localhost:11434`
 
 ## Repository
 

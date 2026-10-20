@@ -1,5 +1,23 @@
 @NexaStore.Api_HostAddress = http://localhost:5175
 
+### AI provider status
+GET {{NexaStore.Api_HostAddress}}/api/assistant/status
+Accept: application/json
+
+### Stream a local Ollama response
+POST {{NexaStore.Api_HostAddress}}/api/assistant/chat/stream
+Content-Type: application/json
+Accept: text/event-stream
+
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "Explain RAM versus VRAM for local AI workloads."
+    }
+  ]
+}
+
 GET {{NexaStore.Api_HostAddress}}/api/products
 Accept: application/json
 

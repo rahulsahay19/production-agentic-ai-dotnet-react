@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc;
 using NexaStore.Application.Cart;
 using NexaStore.Application.Catalog;
+using NexaStore.Application.AI;
 
 namespace NexaStore.IntegrationTests.Api;
 
@@ -66,6 +67,40 @@ public sealed class CommerceApiTests(NexaStoreApiFactory factory) : IClassFixtur
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("Healthy", await response.Content.ReadAsStringAsync(CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task AssistantStatus_ReturnsConfiguredLocalProvider()
+    {
+        var client = factory.CreateClient();
+
+        var status = await client.GetFromJsonAsync<AssistantStatusDto>(
+            "/api/assistant/status",
+            CancellationToken.None);
+
+        Assert.NotNull(status);
+        Assert.True(status.Enabled);
+        Assert.Equal("Ollama", status.Provider);
+    }
+
+    [Fact]
+    public async Task AssistantStream_ReturnsServerSentEvents()
+    {
+        var client = factory.CreateClient();
+        var request = new AssistantChatRequest(
+            [new AssistantMessageDto("user", "What is VRAM?")]);
+
+        var response = await client.PostAsJsonAsync(
+            "/api/assistant/chat/stream",
+            request,
+            CancellationToken.None);
+        var body = await response.Content.ReadAsStringAsync(CancellationToken.None);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("text/event-stream", response.Content.Headers.ContentType?.MediaType);
+        Assert.Contains("event: delta", body);
+        Assert.Contains("Local test response", body);
+        Assert.Contains("event: done", body);
     }
 
     [Fact]

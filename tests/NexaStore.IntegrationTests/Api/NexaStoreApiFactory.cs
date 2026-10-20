@@ -8,6 +8,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using NexaStore.Infrastructure.Persistence;
 using NexaStore.Infrastructure.Persistence.Seeding;
+using NexaStore.Application.AI;
+using System.Runtime.CompilerServices;
 
 namespace NexaStore.IntegrationTests.Api;
 
@@ -31,6 +33,8 @@ public sealed class NexaStoreApiFactory : WebApplicationFactory<Program>, IAsync
             services.RemoveAll<DbContextOptions<NexaStoreDbContext>>();
             services.RemoveAll<IDbContextOptionsConfiguration<NexaStoreDbContext>>();
             services.AddDbContext<NexaStoreDbContext>(options => options.UseSqlite(_connection));
+            services.RemoveAll<INexaAssistantService>();
+            services.AddSingleton<INexaAssistantService, TestAssistantService>();
         });
     }
 
@@ -49,5 +53,17 @@ public sealed class NexaStoreApiFactory : WebApplicationFactory<Program>, IAsync
     {
         await DisposeAsync();
         await _connection.DisposeAsync();
+    }
+
+    private sealed class TestAssistantService : INexaAssistantService
+    {
+        public async IAsyncEnumerable<string> StreamResponseAsync(
+            IReadOnlyList<AssistantMessageDto> messages,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+            yield return "Local test response";
+        }
     }
 }

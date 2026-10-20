@@ -34,6 +34,10 @@ npm run build
 
 The customer ID defaults to the deterministic development customer seeded by the API. Authentication will replace this development bridge in a later phase.
 
+## Local AI assistant
+
+The header's **Ask Nexa AI** action opens a streaming assistant backed by the API's provider-neutral AI service. The current phase supports general hardware guidance only; live catalog grounding, tools, RAG, and agents are intentionally not enabled yet.
+
 ## Docker
 
 From the repository root, start the complete stack with:
