@@ -43,4 +43,17 @@ public sealed class AssistantChatRequestValidatorTests
         Assert.False(result.IsValid);
         Assert.Contains(result.Errors, error => error.PropertyName == "Messages");
     }
+
+    [Fact]
+    public async Task Validate_WhenResponseStyleIsUnsupported_Fails()
+    {
+        var request = new AssistantChatRequest(
+            [new AssistantMessageDto("user", "Explain model quantization.")],
+            "creative");
+
+        var result = await _validator.ValidateAsync(request);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, error => error.PropertyName == "ResponseStyle");
+    }
 }

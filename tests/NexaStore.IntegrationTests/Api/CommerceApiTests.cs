@@ -81,6 +81,8 @@ public sealed class CommerceApiTests(NexaStoreApiFactory factory) : IClassFixtur
         Assert.NotNull(status);
         Assert.True(status.Enabled);
         Assert.Equal("Ollama", status.Provider);
+        Assert.Contains("streaming", status.Capabilities);
+        Assert.Contains("balanced", status.ResponseStyles);
     }
 
     [Fact]
@@ -98,9 +100,12 @@ public sealed class CommerceApiTests(NexaStoreApiFactory factory) : IClassFixtur
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("text/event-stream", response.Content.Headers.ContentType?.MediaType);
+        Assert.Contains("event: started", body);
+        Assert.Contains("\"responseStyle\":\"balanced\"", body);
         Assert.Contains("event: delta", body);
         Assert.Contains("Local test response", body);
         Assert.Contains("event: done", body);
+        Assert.Contains("\"chunks\":1", body);
     }
 
     [Fact]

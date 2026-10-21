@@ -36,7 +36,7 @@ The customer ID defaults to the deterministic development customer seeded by the
 
 ## Local AI assistant
 
-The header's **Ask Nexa AI** action opens a streaming assistant backed by the API's provider-neutral AI service. The current phase supports general hardware guidance only; live catalog grounding, tools, RAG, and agents are intentionally not enabled yet.
+The header's **Ask Nexa AI** action opens a streaming assistant backed by the API's provider-neutral AI service. Users can choose concise, balanced, or detailed prompting, cancel generation, clear the current conversation, and see local generation time. The current module supports general hardware guidance only; live catalog grounding, tools, RAG, and agents are intentionally not enabled yet.
 
 ## Docker
 

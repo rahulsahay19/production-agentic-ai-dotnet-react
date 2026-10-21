@@ -9,7 +9,8 @@ namespace NexaStore.Api.Controllers
     [Route("api/assistant")]
     [Tags("Nexa AI")]
 
-    public sealed class AssistantController(INexaAssistantService assistant,
+    public sealed class AssistantController(
+        INexaAssistantService assistant,
         AiOptions options,
         ILogger<AssistantController> logger) : ControllerBase
     {
@@ -19,25 +20,46 @@ namespace NexaStore.Api.Controllers
             options.Enabled,
             options.Provider,
             options.Model,
-            "Local LLM Conversation"));
+            ["chat", "prompt-styles", "streaming", "cancellation"],
+            AssistantResponseStyles.All));
 
         [HttpPost("chat/stream")]
         [Produces("text/event-stream")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
-        public async Task Stream([FromBody] AssistantChatRequest request, CancellationToken cancellationToken)
+        public async Task Stream(
+            [FromBody] AssistantChatRequest request,
+            CancellationToken cancellationToken)
         {
+            var requestedId = HttpContext.TraceIdentifier;
+            var startedAt = TimeProvider.System.GetTimestamp();
+            var sequence = 0;
+            
             Response.StatusCode = StatusCodes.Status200OK;
             Response.ContentType = "text/event-stream";
             Response.Headers.CacheControl = "no-cache, no-transform";
             Response.Headers.Append("X-Accel-Buffering", "no");
             try
             {
-                await foreach(var chunk in assistant.StreamResponseAsync(request.Messages, cancellationToken))
+                await WriteEventAsync("started", new
                 {
-                    await WriteEventAsync("delta", new { content = chunk }, cancellationToken);
+                    requestedId,
+                    model = options.Model,
+                    responseStyle = request.ResponseStyle
+                }, cancellationToken);
+
+                await foreach(var chunk in assistant.StreamResponseAsync(
+                    request.Messages,
+                    request.ResponseStyle,
+                    cancellationToken))
+                {
+                    await WriteEventAsync("delta", new { sequence = sequence++, content = chunk }, cancellationToken);
                 }
-                await WriteEventAsync("done", new { }, cancellationToken);
+                await WriteEventAsync("done", 
+                    new {
+                        chunks = sequence, 
+                        elapsedMs = (long)TimeProvider.System.GetElapsedTime(startedAt).TotalMilliseconds
+                    }, cancellationToken);
             }
             catch(OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {

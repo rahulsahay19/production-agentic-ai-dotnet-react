@@ -8,7 +8,7 @@ The current application combines the conventional commerce foundation with a
 provider-neutral local conversational AI integration powered by Ollama. RAG,
 tools, MCP, and agents remain intentionally reserved for later phases.
 
-## Phase 02: local LLM
+## Module 02: local LLM
 
 - `Microsoft.Extensions.AI.IChatClient` provider abstraction
 - Ollama local model integration
@@ -18,6 +18,17 @@ tools, MCP, and agents remain intentionally reserved for later phases.
 - Docker-managed model provisioning and persistent model storage
 
 See [local AI documentation](docs/local-ai.md) for configuration, model selection, and manual verification.
+
+## Module 03: prompting and streaming
+
+- Composable, server-owned system and response-style prompts
+- Concise, balanced, and detailed response modes
+- Server-controlled temperature and output-token limits
+- Structured `started`, `delta`, `done`, and `error` SSE events
+- Ordered chunks, request correlation, elapsed-time reporting, and cancellation
+- Clear-conversation and response-style controls in the React assistant
+
+See [prompting and streaming documentation](docs/prompting-streaming.md) for the prompt architecture, streaming protocol, and module boundaries.
 
 ## Backend status
 

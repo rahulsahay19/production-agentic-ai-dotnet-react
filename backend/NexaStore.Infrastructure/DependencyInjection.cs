@@ -23,7 +23,16 @@ public static class DependencyInjection
             services.AddScoped<INexaAssistantService, DisabledNexaAssistantService>();
             return services;
         }
-        services.AddSingleton<IChatClient>(_ => new OllamaApiClient(new Uri(options.Endpoint), options.Model));
+        services.AddSingleton<IChatClient>(_ =>
+        {
+            var httpClient = new HttpClient
+            {
+                BaseAddress = new Uri(options.Endpoint),
+                Timeout = TimeSpan.FromMinutes(10)
+            };
+
+            return new OllamaApiClient(httpClient, options.Model);
+        });
         services.AddScoped<INexaAssistantService, OllamaNexaAssistantService>();
         return services;
     }

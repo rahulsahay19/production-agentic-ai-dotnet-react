@@ -2,6 +2,7 @@ import { env } from "@/config/env";
 import { http } from "@/lib/http";
 import type {
   AssistantMessage,
+  AssistantResponseStyle,
   AssistantStatus,
   AssistantStreamEvent,
 } from "./types";
@@ -13,6 +14,7 @@ export async function getAssistantStatus() {
 
 export async function streamAssistantResponse(
   messages: AssistantMessage[],
+  responseStyle: AssistantResponseStyle,
   onEvent: (event: AssistantStreamEvent) => void,
   signal: AbortSignal,
 ) {
@@ -25,6 +27,7 @@ export async function streamAssistantResponse(
     },
     body: JSON.stringify({
       messages: messages.map(({ role, content }) => ({ role, content })),
+      responseStyle,
     }),
     signal,
   });
@@ -49,12 +52,16 @@ export async function streamAssistantResponse(
     for (const frame of frames) {
       const lines = frame.split("\n");
       const type = lines.find((line) => line.startsWith("event: "))?.slice(7);
-      const data = lines.find((line) => line.startsWith("data: "))?.slice(6);
+      const data = lines
+        .filter((line) => line.startsWith("data: "))
+        .map((line) => line.slice(6))
+        .join("\n");
       if (!type || !data) continue;
 
       const payload = JSON.parse(data);
-      if (type === "delta") onEvent({ type, content: payload.content });
-      if (type === "done") onEvent({ type });
+      if (type === "started") onEvent({ type, ...payload });
+      if (type === "delta") onEvent({ type, sequence: payload.sequence, content: payload.content });
+      if (type === "done") onEvent({ type, ...payload });
       if (type === "error") onEvent({ type, message: payload.message });
     }
 
