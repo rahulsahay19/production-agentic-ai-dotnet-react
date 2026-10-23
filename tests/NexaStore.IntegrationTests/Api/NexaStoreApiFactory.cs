@@ -57,14 +57,15 @@ public sealed class NexaStoreApiFactory : WebApplicationFactory<Program>, IAsync
 
     private sealed class TestAssistantService : INexaAssistantService
     {
-        public async IAsyncEnumerable<string> StreamResponseAsync(
+        public async IAsyncEnumerable<AssistantStreamUpdate> StreamResponseAsync(
             IReadOnlyList<AssistantMessageDto> messages,
             string responseStyle = AssistantResponseStyles.Balanced,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            yield return "Local test response";
+            yield return AssistantStreamUpdate.Tool("search_products", "Searched the live product catalog");
+            yield return AssistantStreamUpdate.Delta("Local test response");
         }
     }
 }

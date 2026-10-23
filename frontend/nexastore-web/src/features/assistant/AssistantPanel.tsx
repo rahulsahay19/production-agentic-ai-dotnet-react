@@ -2,6 +2,7 @@ import {
   Bot,
   CircleStop,
   Cpu,
+  DatabaseZap,
   Send,
   SlidersHorizontal,
   Sparkles,
@@ -18,22 +19,19 @@ import type {
 } from "./types";
 
 const suggestions = [
-  "What should I consider for local LLM development?",
-  "Explain RAM versus VRAM for AI workloads.",
-  "Help me choose between a laptop and workstation.",
+  "Show me AI-ready laptops with at least 16 GB VRAM.",
+  "Which products are suitable for running local LLMs?",
+  "What product categories are currently available?",
 ];
 
 const welcome: AssistantMessage = {
   id: "welcome",
   role: "assistant",
   content:
-    "Hi, I’m Nexa AI running locally through Ollama. I can explain hardware and help clarify your requirements. Live product, stock, and order access arrives in later phases.",
+    "Hi, I’m Nexa AI running locally through Ollama. I can now search the live NexaStore catalog, inspect product specifications, and check inventory. Cart, order, customer, and policy access is not enabled.",
 };
 
-const responseStyles: {
-  value: AssistantResponseStyle;
-  label: string;
-}[] = [
+const responseStyles: { value: AssistantResponseStyle; label: string }[] = [
   { value: "concise", label: "Concise" },
   { value: "balanced", label: "Balanced" },
   { value: "detailed", label: "Detailed" },
@@ -54,16 +52,12 @@ export function AssistantPanel({
   const [streaming, setStreaming] = useState(false);
   const [elapsedMs, setElapsedMs] = useState<number>();
   const [error, setError] = useState<string>();
-
   const abortRef = useRef<AbortController | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open || status) return;
-
-    getAssistantStatus()
-      .then(setStatus)
-      .catch(() => setStatus(undefined));
+    getAssistantStatus().then(setStatus).catch(() => setStatus(undefined));
   }, [open, status]);
 
   useEffect(() => {
@@ -78,7 +72,6 @@ export function AssistantPanel({
 
   const submit = async (prompt = input) => {
     const content = prompt.trim();
-
     if (!content || streaming) return;
 
     const userMessage: AssistantMessage = {
@@ -86,36 +79,17 @@ export function AssistantPanel({
       role: "user",
       content,
     };
-
     const assistantId = crypto.randomUUID();
-
-    // Only send valid conversation history to the backend.
-    // The welcome message is UI-only and failed/empty assistant
-    // placeholders must not become part of the LLM conversation.
-    const history = [
-      ...messages.filter(
-        (message) =>
-          message.id !== "welcome" &&
-          message.content.trim().length > 0,
-      ),
-      userMessage,
-    ];
-
+    const history = [...messages.filter((message) => message.id !== "welcome"), userMessage];
     setMessages((current) => [
       ...current,
       userMessage,
-      {
-        id: assistantId,
-        role: "assistant",
-        content: "",
-      },
+      { id: assistantId, role: "assistant", content: "" },
     ]);
-
     setInput("");
     setError(undefined);
     setElapsedMs(undefined);
     setStreaming(true);
-
     const controller = new AbortController();
     abortRef.current = controller;
 
@@ -128,33 +102,32 @@ export function AssistantPanel({
             setMessages((current) =>
               current.map((message) =>
                 message.id === assistantId
+                  ? { ...message, content: message.content + event.content }
+                  : message,
+              ),
+            );
+          }
+          if (event.type === "tool") {
+            setMessages((current) =>
+              current.map((message) =>
+                message.id === assistantId
                   ? {
                       ...message,
-                      content: message.content + event.content,
+                      tools: [
+                        ...(message.tools ?? []),
+                        { name: event.name, label: event.label },
+                      ],
                     }
                   : message,
               ),
             );
           }
-
-          if (event.type === "done") {
-            setElapsedMs(event.elapsedMs);
-          }
-
-          if (event.type === "error") {
-            setError(event.message);
-          }
+          if (event.type === "done") setElapsedMs(event.elapsedMs);
+          if (event.type === "error") setError(event.message);
         },
         controller.signal,
       );
     } catch (requestError) {
-      // Remove the assistant placeholder when the request fails.
-      // This prevents an empty assistant message from being sent
-      // as conversation history on the next request.
-      setMessages((current) =>
-        current.filter((message) => message.id !== assistantId),
-      );
-
       if (!controller.signal.aborted) {
         setError(
           requestError instanceof Error
@@ -170,12 +143,7 @@ export function AssistantPanel({
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-ink-950/75 p-0 backdrop-blur-sm sm:p-4">
-      <button
-        className="absolute inset-0"
-        onClick={onClose}
-        aria-label="Close Nexa AI"
-      />
-
+      <button className="absolute inset-0" onClick={onClose} aria-label="Close Nexa AI" />
       <section
         role="dialog"
         aria-modal="true"
@@ -186,23 +154,17 @@ export function AssistantPanel({
           <div className="grid size-11 place-items-center rounded-2xl bg-gradient-to-br from-violet-400 to-electric-300 text-ink-950 shadow-glow">
             <Bot size={23} />
           </div>
-
           <div>
             <div className="flex items-center gap-2">
               <h2 className="font-display text-lg font-bold">Nexa AI</h2>
-
               <span className="rounded-full bg-lime-300/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-lime-300">
                 Local
               </span>
             </div>
-
             <p className="text-xs text-slate-500">
-              {status
-                ? `${status.provider} · ${status.model}`
-                : "Connecting to Ollama…"}
+              {status ? `${status.provider} · ${status.model}` : "Connecting to Ollama…"}
             </p>
           </div>
-
           <button
             onClick={() => {
               abortRef.current?.abort();
@@ -216,7 +178,6 @@ export function AssistantPanel({
           >
             <Trash2 size={18} />
           </button>
-
           <button
             onClick={onClose}
             className="rounded-full p-2 text-slate-400 hover:bg-white/8 hover:text-white"
@@ -230,18 +191,11 @@ export function AssistantPanel({
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex gap-3 ${
-                message.role === "user" ? "flex-row-reverse" : ""
-              }`}
+              className={`flex gap-3 ${message.role === "user" ? "flex-row-reverse" : ""}`}
             >
               <div className="grid size-8 shrink-0 place-items-center rounded-xl bg-white/7 text-electric-300">
-                {message.role === "assistant" ? (
-                  <Sparkles size={15} />
-                ) : (
-                  <UserRound size={15} />
-                )}
+                {message.role === "assistant" ? <Sparkles size={15} /> : <UserRound size={15} />}
               </div>
-
               <div
                 className={`max-w-[82%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-6 ${
                   message.role === "user"
@@ -249,20 +203,25 @@ export function AssistantPanel({
                     : "rounded-tl-sm border border-white/8 bg-white/5 text-slate-300"
                 }`}
               >
+                {message.tools?.map((tool, index) => (
+                  <div
+                    key={`${message.id}-${tool.name}-${index}`}
+                    className="mb-2 flex items-center gap-2 rounded-lg border border-lime-300/15 bg-lime-300/5 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-lime-200"
+                  >
+                    <DatabaseZap size={12} />
+                    {tool.label}
+                  </div>
+                ))}
                 {message.content || (
                   <span className="inline-flex gap-1 py-2">
                     {[0, 1, 2].map((dot) => (
-                      <span
-                        key={dot}
-                        className="size-1.5 animate-pulse rounded-full bg-electric-300"
-                      />
+                      <span key={dot} className="size-1.5 animate-pulse rounded-full bg-electric-300" />
                     ))}
                   </span>
                 )}
               </div>
             </div>
           ))}
-
           {messages.length === 1 && (
             <div className="grid gap-2 pt-2">
               {suggestions.map((suggestion) => (
@@ -276,19 +235,16 @@ export function AssistantPanel({
               ))}
             </div>
           )}
-
           {error && (
             <div className="rounded-xl border border-rose-400/20 bg-rose-400/8 px-4 py-3 text-xs leading-5 text-rose-200">
               {error}
             </div>
           )}
-
           {elapsedMs !== undefined && !streaming && !error && (
             <p className="text-center text-[10px] font-semibold uppercase tracking-wider text-slate-600">
               Generated locally in {(elapsedMs / 1000).toFixed(1)}s
             </p>
           )}
-
           <div ref={endRef} />
         </div>
 
@@ -299,15 +255,8 @@ export function AssistantPanel({
           }}
           className="border-t border-white/8 p-4"
         >
-          <div
-            className="mb-3 flex items-center gap-2"
-            aria-label="Response style"
-          >
-            <SlidersHorizontal
-              size={14}
-              className="mr-1 text-slate-500"
-            />
-
+          <div className="mb-3 flex items-center gap-2" aria-label="Response style">
+            <SlidersHorizontal size={14} className="mr-1 text-slate-500" />
             {responseStyles.map((style) => (
               <button
                 key={style.value}
@@ -325,13 +274,8 @@ export function AssistantPanel({
               </button>
             ))}
           </div>
-
           <div className="flex items-end gap-2 rounded-2xl border border-white/10 bg-ink-950/70 p-2 focus-within:border-electric-300/40">
-            <Cpu
-              className="mb-2.5 ml-2 shrink-0 text-violet-300"
-              size={17}
-            />
-
+            <Cpu className="mb-2.5 ml-2 shrink-0 text-violet-300" size={17} />
             <textarea
               value={input}
               onChange={(event) => setInput(event.target.value)}
@@ -346,7 +290,6 @@ export function AssistantPanel({
               placeholder="Ask about developer and AI hardware…"
               className="max-h-32 min-h-10 flex-1 resize-none bg-transparent py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none"
             />
-
             {streaming ? (
               <button
                 type="button"
@@ -367,10 +310,8 @@ export function AssistantPanel({
               </button>
             )}
           </div>
-
           <p className="mt-2 text-center text-[10px] text-slate-600">
-            Local model responses may be inaccurate. Live store grounding is
-            not enabled yet.
+            Product and inventory facts use read-only live tools. Other answers may be inaccurate.
           </p>
         </form>
       </section>

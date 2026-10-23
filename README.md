@@ -5,8 +5,9 @@
 NexaStore is a production-oriented .NET 10 modular-monolith e-commerce
 application that evolves incrementally into an agentic AI reference platform.
 The current application combines the conventional commerce foundation with a
-provider-neutral local conversational AI integration powered by Ollama. RAG,
-tools, MCP, and agents remain intentionally reserved for later phases.
+provider-neutral local conversational AI integration powered by Ollama. The
+assistant can query public commerce data through read-only tools, while RAG,
+MCP, and agents remain intentionally reserved for later modules.
 
 ## Module 02: local LLM
 
@@ -29,6 +30,17 @@ See [local AI documentation](docs/local-ai.md) for configuration, model selectio
 - Clear-conversation and response-style controls in the React assistant
 
 See [prompting and streaming documentation](docs/prompting-streaming.md) for the prompt architecture, streaming protocol, and module boundaries.
+
+## Module 04: AI tools
+
+- Automatic function invocation through `Microsoft.Extensions.AI`
+- Live product search, product-detail, category, and inventory tools
+- Strongly typed tool inputs and compact structured results
+- Read-only allowlist with bounded catalog results and inventory quantities
+- Tool-loop iteration and error limits
+- Visible tool activity in the streaming React experience
+
+See [AI tools documentation](docs/ai-tools.md) for the tool contracts, execution flow, safeguards, and module boundaries.
 
 ## Backend status
 

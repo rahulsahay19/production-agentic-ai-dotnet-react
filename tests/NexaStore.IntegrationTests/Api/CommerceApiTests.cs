@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using NexaStore.Application.Cart;
 using NexaStore.Application.Catalog;
 using NexaStore.Application.AI;
+using Microsoft.Extensions.DependencyInjection;
+using NexaStore.Infrastructure.AI;
 
 namespace NexaStore.IntegrationTests.Api;
 
@@ -82,6 +84,7 @@ public sealed class CommerceApiTests(NexaStoreApiFactory factory) : IClassFixtur
         Assert.True(status.Enabled);
         Assert.Equal("Ollama", status.Provider);
         Assert.Contains("streaming", status.Capabilities);
+        Assert.Contains("product-tools", status.Capabilities);
         Assert.Contains("balanced", status.ResponseStyles);
     }
 
@@ -103,9 +106,53 @@ public sealed class CommerceApiTests(NexaStoreApiFactory factory) : IClassFixtur
         Assert.Contains("event: started", body);
         Assert.Contains("\"responseStyle\":\"balanced\"", body);
         Assert.Contains("event: delta", body);
+        Assert.Contains("event: tool", body);
+        Assert.Contains("search_products", body);
         Assert.Contains("Local test response", body);
         Assert.Contains("event: done", body);
         Assert.Contains("\"chunks\":1", body);
+    }
+
+    [Fact]
+    public async Task AiProductTools_SearchSeededCatalogAndExposeOnlyReadOperations()
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var tools = scope.ServiceProvider.GetRequiredService<NexaStoreAiTools>();
+
+        var search = await tools.SearchProductsAsync(
+            keyword: null,
+            category: null,
+            brand: null,
+            maximumPrice: null,
+            minimumRamGb: 64,
+            minimumVramGb: 16,
+            aiReady: true,
+            localLlmReady: true,
+            CancellationToken.None);
+        var names = tools.CreateAll().Select(tool => tool.Name).ToArray();
+
+        Assert.Null(search.Error);
+        Assert.NotEmpty(search.Items);
+        Assert.All(search.Items, product =>
+        {
+            Assert.True(product.AiReady);
+            Assert.True(product.LocalLlmReady);
+        });
+        Assert.Equal(
+            ["search_products", "get_product_details", "list_product_categories", "check_inventory"],
+            names);
+    }
+
+    [Fact]
+    public async Task AiInventoryTool_RejectsUnsafeQuantityWithoutReadingInventory()
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var tools = scope.ServiceProvider.GetRequiredService<NexaStoreAiTools>();
+
+        var result = await tools.CheckInventoryAsync(Guid.NewGuid(), 21, CancellationToken.None);
+
+        Assert.False(result.IsAvailable);
+        Assert.Equal("Quantity must be between 1 and 20.", result.Error);
     }
 
     [Fact]

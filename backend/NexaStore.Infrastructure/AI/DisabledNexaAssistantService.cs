@@ -5,14 +5,14 @@ namespace NexaStore.Infrastructure.AI
 {
     public sealed class DisabledNexaAssistantService : INexaAssistantService
     {
-        public async IAsyncEnumerable<string> StreamResponseAsync(
+        public async IAsyncEnumerable<AssistantStreamUpdate> StreamResponseAsync(
             IReadOnlyList<AssistantMessageDto> messages, 
             string responseStyles = AssistantResponseStyles.Balanced,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            yield return "Nexa AI is diabled in this enviornment.";
+            yield return AssistantStreamUpdate.Delta("Nexa AI is disabled in this environment");
         }
     }
 }

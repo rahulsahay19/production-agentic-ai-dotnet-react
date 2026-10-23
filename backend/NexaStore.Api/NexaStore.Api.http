@@ -4,7 +4,7 @@
 GET {{NexaStore.Api_HostAddress}}/api/assistant/status
 Accept: application/json
 
-### Stream a local Ollama response
+### Stream a tool-grounded local Ollama response
 POST {{NexaStore.Api_HostAddress}}/api/assistant/chat/stream
 Content-Type: application/json
 Accept: text/event-stream
@@ -14,7 +14,7 @@ Accept: text/event-stream
   "messages": [
     {
       "role": "user",
-      "content": "Explain RAM versus VRAM for local AI workloads."
+      "content": "Find AI-ready products with at least 64 GB RAM and 16 GB VRAM."
     }
   ]
 }

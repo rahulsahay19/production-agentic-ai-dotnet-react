@@ -5,7 +5,10 @@ export type AssistantMessage = {
   id: string;
   role: AssistantRole;
   content: string;
+  tools?: AssistantToolActivity[];
 };
+
+export type AssistantToolActivity = { name: string; label: string };
 
 export type AssistantStatus = {
   enabled: boolean;
@@ -23,5 +26,6 @@ export type AssistantStreamEvent =
       responseStyle: AssistantResponseStyle;
     }
   | { type: "delta"; sequence: number; content: string }
+  | { type: "tool"; name: string; label: string }
   | { type: "done"; requestId: string; chunks: number; elapsedMs: number }
   | { type: "error"; message: string };

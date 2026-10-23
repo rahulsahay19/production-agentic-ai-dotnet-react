@@ -61,6 +61,7 @@ export async function streamAssistantResponse(
       const payload = JSON.parse(data);
       if (type === "started") onEvent({ type, ...payload });
       if (type === "delta") onEvent({ type, sequence: payload.sequence, content: payload.content });
+      if (type === "tool") onEvent({ type, name: payload.name, label: payload.label });
       if (type === "done") onEvent({ type, ...payload });
       if (type === "error") onEvent({ type, message: payload.message });
     }
