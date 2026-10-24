@@ -6,21 +6,22 @@ using System.Runtime.CompilerServices;
 namespace NexaStore.Infrastructure.AI
 {
     public sealed class NexaAssistantService(
-    IChatClient chatClient,
-    AiOptions options,
-    NexaStoreAiTools tools,
-    AiToolActivityTracker activityTracker,
-    ILogger<NexaAssistantService> logger) : INexaAssistantService
+     IChatClient chatClient,
+     AiOptions options,
+     NexaStoreAiTools tools,
+     AiToolActivityTracker activityTracker,
+     ILogger<NexaAssistantService> logger) : INexaAssistantService
     {
         public async IAsyncEnumerable<AssistantStreamUpdate> StreamResponseAsync(
             IReadOnlyList<AssistantMessageDto> messages,
-            string responseStyle = "balanced",
+            string responseStyle = AssistantResponseStyles.Balanced,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             var chatMessages = new List<ChatMessage>(messages.Count + 1)
-            {
-                new(ChatRole.System, AssistantPromptFactory.Create(responseStyle))
-            };
+        {
+            new(ChatRole.System, AssistantPromptFactory.Create(responseStyle))
+        };
+
             chatMessages.AddRange(messages.Select(message => new ChatMessage(
                 string.Equals(message.Role, "assistant", StringComparison.OrdinalIgnoreCase)
                     ? ChatRole.Assistant
@@ -28,17 +29,37 @@ namespace NexaStore.Infrastructure.AI
                 message.Content.Trim())));
 
             logger.LogInformation(
-                "Starting {provider} AI response for a conversation with {MessageCount} messages",
+                "Starting {Provider} AI response for a conversation with {MessageCount} messages",
                 options.Provider,
                 messages.Count);
+
+            var chatOptions = new ChatOptions
+            {
+                MaxOutputTokens = options.MaxOutputTokens,
+                Tools = tools.CreateAll()
+            };
+
+            if (string.Equals(options.Provider, AiProviders.Ollama, StringComparison.OrdinalIgnoreCase))
+            {
+                chatOptions.Temperature = options.Temperature;
+            }
+            else
+            {
+                chatOptions.Reasoning = new ReasoningOptions
+                {
+                    Effort = ReasoningEffort.Medium
+                };
+            }
+
+            logger.LogDebug(
+                "AI request options selected for {Provider}: temperature configured = {HasTemperature}, reasoning effort = {ReasoningEffort}",
+                options.Provider,
+                chatOptions.Temperature.HasValue,
+                chatOptions.Reasoning?.Effort);
+
             await foreach (var update in chatClient.GetStreamingResponseAsync(
                 chatMessages,
-                new ChatOptions
-                {
-                    Temperature = options.Temperature,
-                    MaxOutputTokens = options.MaxOutputTokens,
-                    Tools = tools.CreateAll()
-                },
+                chatOptions,
                 cancellationToken: cancellationToken))
             {
                 foreach (var activity in activityTracker.Drain())
@@ -59,4 +80,3 @@ namespace NexaStore.Infrastructure.AI
         }
     }
 }
-

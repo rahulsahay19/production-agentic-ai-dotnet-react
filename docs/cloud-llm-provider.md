@@ -1,6 +1,6 @@
 # Cloud LLM provider
 
-Module 05 makes the NexaStore assistant provider-selectable. OpenAI is the cloud-first default, while Ollama remains available for local development. Both providers sit behind `Microsoft.Extensions.AI.IChatClient` and share the same streaming, prompt, cancellation, and read-only tool pipeline introduced in Modules 02–04.
+Module 05 makes the NexaStore assistant provider-selectable. OpenAI is the cloud-first default, while Ollama remains available for local development. Both providers sit behind `Microsoft.Extensions.AI.IChatClient` and share the same streaming, prompt, cancellation, and read-only tool pipeline introduced in Modules 02–04. The OpenAI adapter uses `/v1/responses`; Ollama continues to use its native chat endpoint.
 
 This module does not add RAG, embeddings, agents, memory, or new commerce tools.
 
@@ -53,9 +53,9 @@ When the API runs directly on the host, use `AI__Providers__Ollama__Endpoint=htt
 
 ## Provider boundary
 
-`AddAi` validates configuration at startup, creates the selected provider client, and wraps it once with the shared function-invocation middleware. `NexaAssistantService` therefore contains no provider SDK logic. Provider credentials remain an infrastructure concern, and switching provider does not alter the application contract or frontend streaming protocol.
+`AddAi` validates configuration at startup, creates the selected provider client, and wraps it once with the shared function-invocation middleware. For OpenAI it adapts `ResponsesClient` to `IChatClient`, so reasoning models and function tools use the Responses API. `NexaAssistantService` therefore contains no provider SDK logic. Provider credentials remain an infrastructure concern, and switching provider does not alter the application contract or frontend streaming protocol.
 
-OpenAI does not receive the Ollama temperature setting. This keeps the Chat Completions request compatible with the selected reasoning model while preserving the course's existing Ollama behavior.
+OpenAI does not receive the Ollama temperature setting. This preserves reasoning-model compatibility while retaining the course's existing Ollama sampling behavior.
 
 ## Verification
 

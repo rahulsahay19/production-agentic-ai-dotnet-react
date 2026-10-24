@@ -88,7 +88,7 @@ public sealed class AssistantController(
             logger.LogError(exception, "AI provider {Provider} failed while streaming a response", options.Provider);
             await WriteEventAsync(
                 "error",
-                new { message = "Nexa AI could not reach the configured provider. Check its credentials, model access and connectivity." },
+                new { message = "The configured AI provider could not complete this request. Check the server logs for authentication, model-access, request-compatibility, or connectivity details." },
                 CancellationToken.None);
         }
     }

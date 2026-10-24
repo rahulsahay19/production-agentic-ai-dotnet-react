@@ -55,7 +55,11 @@ public static class DependencyInjection
                         Endpoint = new Uri(selectedProvider.Endpoint),
                         Transport = new HttpClientPipelineTransport(httpClient)
                     });
-                providerClient = openAiClient.GetChatClient(selectedProvider.Model).AsIChatClient();
+#pragma warning disable OPENAI001 // Responses adapter is the current supported path for reasoning + function tools.
+                providerClient = openAiClient
+                    .GetResponsesClient()
+                    .AsIChatClient(selectedProvider.Model);
+#pragma warning restore OPENAI001
             }
 
             return new ChatClientBuilder(providerClient)

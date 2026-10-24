@@ -6,6 +6,8 @@ using NexaStore.Application.Catalog;
 using NexaStore.Application.AI;
 using Microsoft.Extensions.DependencyInjection;
 using NexaStore.Infrastructure.AI;
+using Microsoft.Extensions.AI;
+using OpenAI.Responses;
 
 namespace NexaStore.IntegrationTests.Api;
 
@@ -88,6 +90,16 @@ public sealed class CommerceApiTests(NexaStoreApiFactory factory) : IClassFixtur
         Assert.Contains("product-tools", status.Capabilities);
         Assert.Contains("balanced", status.ResponseStyles);
     }
+
+    [Fact]
+#pragma warning disable OPENAI001 // Verifies the intentionally selected Responses API adapter.
+    public void OpenAiProvider_UsesResponsesApiAdapter()
+    {
+        var chatClient = factory.Services.GetRequiredService<IChatClient>();
+
+        Assert.NotNull(chatClient.GetService<ResponsesClient>());
+    }
+#pragma warning restore OPENAI001
 
     [Fact]
     public async Task AssistantStream_ReturnsServerSentEvents()
