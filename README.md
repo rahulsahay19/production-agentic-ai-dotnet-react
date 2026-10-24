@@ -5,7 +5,8 @@
 NexaStore is a production-oriented .NET 10 modular-monolith e-commerce
 application that evolves incrementally into an agentic AI reference platform.
 The current application combines the conventional commerce foundation with a
-provider-neutral local conversational AI integration powered by Ollama. The
+provider-selectable conversational AI integration. OpenAI is the cloud-first
+default and Ollama remains available as a local fallback. The
 assistant can query public commerce data through read-only tools, while RAG,
 MCP, and agents remain intentionally reserved for later modules.
 
@@ -42,6 +43,17 @@ See [prompting and streaming documentation](docs/prompting-streaming.md) for the
 
 See [AI tools documentation](docs/ai-tools.md) for the tool contracts, execution flow, safeguards, and module boundaries.
 
+## Module 05: cloud LLM provider
+
+- Direct OpenAI integration through `Microsoft.Extensions.AI`
+- OpenAI cloud-first configuration with Ollama fallback
+- Shared streaming and function-invocation pipeline across providers
+- Startup validation for provider, credentials, endpoint, model, and timeout
+- Server-only secret handling and provider-aware frontend status
+- Docker Compose profiles so Ollama starts only when requested
+
+See [cloud LLM provider documentation](docs/cloud-llm-provider.md) for secure configuration and provider switching.
+
 ## Backend status
 
 - .NET 10 ASP.NET Core REST API
@@ -77,7 +89,7 @@ docker compose up -d --build
 - Storefront: `http://localhost:5173`
 - API and Swagger: `http://localhost:5175`
 - PostgreSQL: `localhost:5432`
-- Ollama: `http://localhost:11434`
+- Ollama (optional profile): `http://localhost:11434`
 
 ## Repository
 

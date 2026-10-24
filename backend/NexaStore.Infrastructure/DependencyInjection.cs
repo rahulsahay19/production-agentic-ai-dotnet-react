@@ -1,40 +1,64 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NexaStore.Application.Abstractions;
 using NexaStore.Application.AI;
-using NexaStore.Infrastructure.AI;
 using NexaStore.Infrastructure.Persistence;
 using NexaStore.Infrastructure.Persistence.Repositories;
 using NexaStore.Infrastructure.Persistence.Seeding;
+using Microsoft.Extensions.AI;
+using NexaStore.Infrastructure.AI;
 using OllamaSharp;
+using OpenAI;
+using System.ClientModel;
+using System.ClientModel.Primitives;
 
 namespace NexaStore.Infrastructure;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddLocalAi(this IServiceCollection services, AiOptions options)
+    public static IServiceCollection AddAi(this IServiceCollection services, AiOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
         options.Validate();
         services.AddSingleton(options);
-        if(!options.Enabled)
+
+        if (!options.Enabled)
         {
             services.AddScoped<INexaAssistantService, DisabledNexaAssistantService>();
             return services;
         }
+
         services.AddSingleton<IChatClient>(provider =>
         {
-            var httpClient = new HttpClient
+            var selectedProvider = options.SelectedProvider;
+            IChatClient providerClient;
+            if (string.Equals(options.Provider, AiProviders.Ollama, StringComparison.OrdinalIgnoreCase))
             {
-                BaseAddress = new Uri(options.Endpoint),
-                Timeout = TimeSpan.FromMinutes(10)
-            };
+                var httpClient = new HttpClient
+                {
+                    BaseAddress = new Uri(selectedProvider.Endpoint),
+                    Timeout = TimeSpan.FromSeconds(options.RequestTimeoutSeconds)
+                };
+                providerClient = new OllamaApiClient(httpClient, selectedProvider.Model);
+            }
+            else
+            {
+                var httpClient = new HttpClient
+                {
+                    Timeout = TimeSpan.FromSeconds(options.RequestTimeoutSeconds)
+                };
+                var openAiClient = new OpenAIClient(
+                    new ApiKeyCredential(selectedProvider.ApiKey!),
+                    new OpenAIClientOptions
+                    {
+                        Endpoint = new Uri(selectedProvider.Endpoint),
+                        Transport = new HttpClientPipelineTransport(httpClient)
+                    });
+                providerClient = openAiClient.GetChatClient(selectedProvider.Model).AsIChatClient();
+            }
 
-            var ollamaClient = new OllamaApiClient(httpClient, options.Model);
-
-            return new ChatClientBuilder(ollamaClient)
+            return new ChatClientBuilder(providerClient)
                 .UseFunctionInvocation(
                     provider.GetRequiredService<ILoggerFactory>(),
                     client =>
@@ -49,9 +73,10 @@ public static class DependencyInjection
         });
         services.AddScoped<AiToolActivityTracker>();
         services.AddScoped<NexaStoreAiTools>();
-        services.AddScoped<INexaAssistantService, OllamaNexaAssistantService>();
+        services.AddScoped<INexaAssistantService, NexaAssistantService>();
         return services;
     }
+
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, string connectionString)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(connectionString);

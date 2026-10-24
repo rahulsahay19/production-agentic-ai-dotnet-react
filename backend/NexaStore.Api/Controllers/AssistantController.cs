@@ -18,7 +18,7 @@ public sealed class AssistantController(
     public ActionResult<AssistantStatusDto> GetStatus() => Ok(new AssistantStatusDto(
         options.Enabled,
         options.Provider,
-        options.Model,
+        options.SelectedProvider.Model,
         ["chat", "prompt-styles", "streaming", "cancellation", "product-tools", "inventory-tools"],
         AssistantResponseStyles.All));
 
@@ -44,7 +44,7 @@ public sealed class AssistantController(
             await WriteEventAsync("started", new
             {
                 requestId,
-                model = options.Model,
+                model = options.SelectedProvider.Model,
                 responseStyle = request.ResponseStyle
             }, cancellationToken);
 
@@ -85,10 +85,10 @@ public sealed class AssistantController(
         }
         catch (Exception exception)
         {
-            logger.LogError(exception, "Local AI provider failed while streaming a response");
+            logger.LogError(exception, "AI provider {Provider} failed while streaming a response", options.Provider);
             await WriteEventAsync(
                 "error",
-                new { message = "Nexa AI could not reach the local model. Confirm Ollama and the configured model are running." },
+                new { message = "Nexa AI could not reach the configured provider. Check its credentials, model access and connectivity." },
                 CancellationToken.None);
         }
     }

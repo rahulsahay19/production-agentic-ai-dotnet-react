@@ -17,7 +17,7 @@ The tools call application services rather than repositories or SQL directly. Ex
 
 1. The API supplies the server-owned system prompt and the current conversation.
 2. `ChatOptions.Tools` advertises only the four allowlisted functions.
-3. Ollama decides whether a tool is needed and returns a structured function call.
+3. The configured model provider decides whether a tool is needed and returns a structured function call.
 4. `FunctionInvokingChatClient` validates and invokes the matching local function.
 5. The structured result is returned to the model for its final natural-language answer.
 6. A `tool` SSE event makes each successful lookup visible in the React conversation.

@@ -33,6 +33,7 @@ services:
       retries: 12
       start_period: 10s
     restart: unless-stopped
+    profiles: ["ollama"]
 
   ollama-model:
     image: ollama/ollama:0.40.6
@@ -46,6 +47,7 @@ services:
       ollama:
         condition: service_healthy
     restart: "no"
+    profiles: ["ollama"]
 
   nexastore-api:
     build:
@@ -56,9 +58,13 @@ services:
       ConnectionStrings__NexaStore: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
       Database__ApplyMigrationsOnStartup: "true"
       AI__Enabled: "true"
-      AI__Provider: Ollama
-      AI__Endpoint: http://ollama:11434
-      AI__Model: ${OLLAMA_MODEL:-qwen3.5:4b}
+      AI__Provider: ${AI_PROVIDER:-OpenAI}
+      AI__Providers__OpenAI__Endpoint: ${OPENAI_ENDPOINT:-https://api.openai.com/v1}
+      AI__Providers__OpenAI__Model: ${OPENAI_MODEL:-gpt-5.6-terra}
+      AI__Providers__OpenAI__ApiKey: ${OPENAI_API_KEY:-}
+      AI__Providers__Ollama__Endpoint: ${OLLAMA_ENDPOINT:-http://ollama:11434}
+      AI__Providers__Ollama__Model: ${OLLAMA_MODEL:-qwen3.5:4b}
+      AI__RequestTimeoutSeconds: ${AI_REQUEST_TIMEOUT_SECONDS:-120}
       AI__Temperature: "0.3"
       AI__MaxOutputTokens: "800"
     ports:
@@ -66,8 +72,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      ollama-model:
-        condition: service_completed_successfully
     restart: unless-stopped
 
   nexastore-web:

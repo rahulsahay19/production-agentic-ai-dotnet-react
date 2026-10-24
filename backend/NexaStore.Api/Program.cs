@@ -28,7 +28,7 @@ var commerceOptions = builder.Configuration.GetSection(CommerceOptions.SectionNa
 builder.Services.AddApplication(commerceOptions);
 builder.Services.AddInfrastructure(connectionString);
 var aiOptions = builder.Configuration.GetSection(AiOptions.SectionName).Get<AiOptions>() ?? new AiOptions();
-builder.Services.AddLocalAi(aiOptions);
+builder.Services.AddAi(aiOptions);
 builder.Services.Configure<FrontendOptions>(builder.Configuration.GetSection(FrontendOptions.SectionName));
 var frontendOptions = builder.Configuration.GetSection(FrontendOptions.SectionName).Get<FrontendOptions>() ?? new();
 builder.Services.AddCors(options => options.AddPolicy("Frontend", policy =>

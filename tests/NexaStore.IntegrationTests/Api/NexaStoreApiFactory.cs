@@ -22,11 +22,19 @@ public sealed class NexaStoreApiFactory : WebApplicationFactory<Program>, IAsync
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
+        builder.UseSetting("AI:Provider", "OpenAI");
+        builder.UseSetting("AI:Providers:OpenAI:Endpoint", "https://api.openai.com/v1");
+        builder.UseSetting("AI:Providers:OpenAI:Model", "gpt-5.6-terra");
+        builder.UseSetting("AI:Providers:OpenAI:ApiKey", "test-key");
         builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(
             new Dictionary<string, string?>
             {
                 ["ConnectionStrings:NexaStore"] = "Host=unused;Database=unused",
-                ["Database:ApplyMigrationsOnStartup"] = "false"
+                ["Database:ApplyMigrationsOnStartup"] = "false",
+                ["AI:Provider"] = "OpenAI",
+                ["AI:Providers:OpenAI:Endpoint"] = "https://api.openai.com/v1",
+                ["AI:Providers:OpenAI:Model"] = "gpt-5.6-terra",
+                ["AI:Providers:OpenAI:ApiKey"] = "test-key"
             }));
         builder.ConfigureServices(services =>
         {
@@ -65,7 +73,7 @@ public sealed class NexaStoreApiFactory : WebApplicationFactory<Program>, IAsync
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
             yield return AssistantStreamUpdate.Tool("search_products", "Searched the live product catalog");
-            yield return AssistantStreamUpdate.Delta("Local test response");
+            yield return AssistantStreamUpdate.Delta("Test response");
         }
     }
 }

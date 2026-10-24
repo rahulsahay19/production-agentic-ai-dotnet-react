@@ -15,8 +15,8 @@ describe("AssistantPanel", () => {
     vi.mocked(streamAssistantResponse).mockResolvedValue(undefined);
     vi.mocked(getAssistantStatus).mockResolvedValue({
       enabled: true,
-      provider: "Ollama",
-      model: "qwen3.5:4b",
+      provider: "OpenAI",
+      model: "gpt-5.6-terra",
       capabilities: [
         "chat",
         "prompt-styles",
@@ -29,11 +29,12 @@ describe("AssistantPanel", () => {
     });
   });
 
-  it("shows the local provider and transparent capability boundary", async () => {
+  it("shows the cloud provider and transparent capability boundary", async () => {
     render(<AssistantPanel open onClose={() => undefined} />);
 
     expect(screen.getByRole("dialog", { name: "Nexa AI assistant" })).toBeInTheDocument();
-    expect(await screen.findByText("Ollama · qwen3.5:4b")).toBeInTheDocument();
+    expect(await screen.findByText("OpenAI · gpt-5.6-terra")).toBeInTheDocument();
+    expect(screen.getByText("Cloud")).toBeInTheDocument();
     expect(screen.getByText(/search the live NexaStore catalog/i)).toBeInTheDocument();
   });
 

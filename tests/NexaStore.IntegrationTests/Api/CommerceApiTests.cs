@@ -72,7 +72,7 @@ public sealed class CommerceApiTests(NexaStoreApiFactory factory) : IClassFixtur
     }
 
     [Fact]
-    public async Task AssistantStatus_ReturnsConfiguredLocalProvider()
+    public async Task AssistantStatus_ReturnsConfiguredCloudProvider()
     {
         var client = factory.CreateClient();
 
@@ -82,7 +82,8 @@ public sealed class CommerceApiTests(NexaStoreApiFactory factory) : IClassFixtur
 
         Assert.NotNull(status);
         Assert.True(status.Enabled);
-        Assert.Equal("Ollama", status.Provider);
+        Assert.Equal("OpenAI", status.Provider);
+        Assert.Equal("gpt-5.6-terra", status.Model);
         Assert.Contains("streaming", status.Capabilities);
         Assert.Contains("product-tools", status.Capabilities);
         Assert.Contains("balanced", status.ResponseStyles);
@@ -108,7 +109,7 @@ public sealed class CommerceApiTests(NexaStoreApiFactory factory) : IClassFixtur
         Assert.Contains("event: delta", body);
         Assert.Contains("event: tool", body);
         Assert.Contains("search_products", body);
-        Assert.Contains("Local test response", body);
+        Assert.Contains("Test response", body);
         Assert.Contains("event: done", body);
         Assert.Contains("\"chunks\":1", body);
     }

@@ -28,7 +28,7 @@ const welcome: AssistantMessage = {
   id: "welcome",
   role: "assistant",
   content:
-    "Hi, I’m Nexa AI running locally through Ollama. I can now search the live NexaStore catalog, inspect product specifications, and check inventory. Cart, order, customer, and policy access is not enabled.",
+    "Hi, I’m Nexa AI. I can search the live NexaStore catalog, inspect product specifications, and check inventory. Cart, order, customer, and policy access is not enabled.",
 };
 
 const responseStyles: { value: AssistantResponseStyle; label: string }[] = [
@@ -158,11 +158,11 @@ export function AssistantPanel({
             <div className="flex items-center gap-2">
               <h2 className="font-display text-lg font-bold">Nexa AI</h2>
               <span className="rounded-full bg-lime-300/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-lime-300">
-                Local
+                {status?.provider.toLowerCase() === "ollama" ? "Local" : "Cloud"}
               </span>
             </div>
             <p className="text-xs text-slate-500">
-              {status ? `${status.provider} · ${status.model}` : "Connecting to Ollama…"}
+              {status ? `${status.provider} · ${status.model}` : "Connecting to AI provider…"}
             </p>
           </div>
           <button
@@ -242,7 +242,7 @@ export function AssistantPanel({
           )}
           {elapsedMs !== undefined && !streaming && !error && (
             <p className="text-center text-[10px] font-semibold uppercase tracking-wider text-slate-600">
-              Generated locally in {(elapsedMs / 1000).toFixed(1)}s
+              Generated in {(elapsedMs / 1000).toFixed(1)}s
             </p>
           )}
           <div ref={endRef} />

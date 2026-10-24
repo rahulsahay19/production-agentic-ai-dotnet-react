@@ -5,8 +5,10 @@ Phase 02 introduces conversational AI without RAG, tools, MCP, or agents. NexaSt
 ## Start the complete stack
 
 ```powershell
-docker compose up -d --build
+docker compose --profile ollama up -d --build
 ```
+
+Set `AI_PROVIDER=Ollama`, `AI_ENDPOINT=http://ollama:11434`, and matching `AI_MODEL`/`OLLAMA_MODEL` values in `.env` when using the Docker profile.
 
 The first run downloads the configured Ollama image and model, so it can take several minutes. Model data is retained in the `nexastore-ollama` Docker volume.
 

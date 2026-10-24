@@ -5,23 +5,22 @@ using System.Runtime.CompilerServices;
 
 namespace NexaStore.Infrastructure.AI
 {
-    public sealed class OllamaNexaAssistantService(
+    public sealed class NexaAssistantService(
     IChatClient chatClient,
     AiOptions options,
     NexaStoreAiTools tools,
     AiToolActivityTracker activityTracker,
-    ILogger<OllamaNexaAssistantService> logger) : INexaAssistantService
+    ILogger<NexaAssistantService> logger) : INexaAssistantService
     {
         public async IAsyncEnumerable<AssistantStreamUpdate> StreamResponseAsync(
             IReadOnlyList<AssistantMessageDto> messages,
-            string responseStyle = AssistantResponseStyles.Balanced,
+            string responseStyle = "balanced",
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             var chatMessages = new List<ChatMessage>(messages.Count + 1)
-        {
-            new(ChatRole.System, AssistantPromptFactory.Create(responseStyle))
-        };
-
+            {
+                new(ChatRole.System, AssistantPromptFactory.Create(responseStyle))
+            };
             chatMessages.AddRange(messages.Select(message => new ChatMessage(
                 string.Equals(message.Role, "assistant", StringComparison.OrdinalIgnoreCase)
                     ? ChatRole.Assistant
@@ -29,9 +28,9 @@ namespace NexaStore.Infrastructure.AI
                 message.Content.Trim())));
 
             logger.LogInformation(
-                "Starting local AI response for a conversation with {MessageCount} messages",
+                "Starting {provider} AI response for a conversation with {MessageCount} messages",
+                options.Provider,
                 messages.Count);
-
             await foreach (var update in chatClient.GetStreamingResponseAsync(
                 chatMessages,
                 new ChatOptions
@@ -60,3 +59,4 @@ namespace NexaStore.Infrastructure.AI
         }
     }
 }
+
