@@ -2,7 +2,7 @@ name: nexastore
 
 services:
   postgres:
-    image: postgres:18-alpine
+    image: pgvector/pgvector:pg18-trixie
     environment:
       POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in .env}
       POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env}
@@ -67,6 +67,11 @@ services:
       AI__RequestTimeoutSeconds: ${AI_REQUEST_TIMEOUT_SECONDS:-120}
       AI__Temperature: "0.3"
       AI__MaxOutputTokens: "800"
+      Knowledge__RootPath: /app/knowledge-base
+      Knowledge__EmbeddingModel: ${OPENAI_EMBEDDING_MODEL:-text-embedding-3-small}
+      Knowledge__EmbeddingDimensions: ${OPENAI_EMBEDDING_DIMENSIONS:-1536}
+    volumes:
+      - ./knowledge-base:/app/knowledge-base:ro
     ports:
       - "5175:8080"
     depends_on:

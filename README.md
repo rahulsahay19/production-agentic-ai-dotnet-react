@@ -7,8 +7,9 @@ application that evolves incrementally into an agentic AI reference platform.
 The current application combines the conventional commerce foundation with a
 provider-selectable conversational AI integration. OpenAI is the cloud-first
 default and Ollama remains available as a local fallback. The
-assistant can query public commerce data through read-only tools, while RAG,
-MCP, and agents remain intentionally reserved for later modules.
+assistant can query public commerce data through read-only tools and retrieve
+source-grounded answers from a PostgreSQL/pgvector knowledge base. MCP and
+agents remain intentionally reserved for later modules.
 
 ## Module 02: local LLM
 
@@ -54,6 +55,17 @@ See [AI tools documentation](docs/ai-tools.md) for the tool contracts, execution
 
 See [cloud LLM provider documentation](docs/cloud-llm-provider.md) for secure configuration and provider switching.
 
+## Module 06: OpenAI RAG with pgvector
+
+- PDF extraction with page metadata across the six knowledge domains
+- Overlapping, page-aware chunks and batched OpenAI embeddings
+- PostgreSQL `vector(1536)` storage with an HNSW cosine index
+- SHA-256 idempotent ingestion that skips unchanged documents
+- Semantic-search API plus an allowlisted `search_knowledge_base` AI tool
+- Document-title and page-number citations in assistant answers
+
+See [RAG and pgvector documentation](docs/rag-pgvector.md) for ingestion, configuration, APIs, and module boundaries.
+
 ## Backend status
 
 - .NET 10 ASP.NET Core REST API
@@ -86,6 +98,26 @@ See [frontend documentation](frontend/nexastore-web/README.md) for setup and qua
 docker compose up -d --build
 ```
 
+Docker Compose applies pending EF Core migrations automatically because the API
+container sets `Database__ApplyMigrationsOnStartup=true`. This includes the
+`AddKnowledgeBaseVectors` migration, which enables the PostgreSQL `vector`
+extension and creates the knowledge tables and HNSW index. Compose applies
+existing migration files; it does not generate migrations.
+
+When running the API outside Docker, apply the migrations manually from the
+repository root. PostgreSQL must already be running, and the connection must
+include the credentials from `.env`:
+
+```powershell
+docker compose up -d postgres
+dotnet ef database update --project backend/NexaStore.Infrastructure --startup-project backend/NexaStore.Api --connection "Host=localhost;Port=5432;Database=nexastore;Username=nexastore;Password=<POSTGRES_PASSWORD>"
+```
+
+Create a migration only after intentionally changing the EF model, then commit
+both generated migration files and the updated model snapshot. Multiple
+checkouts must use the same migration files and migration ID; do not generate
+another migration for an already-created schema change.
+
 - Storefront: `http://localhost:5173`
 - API and Swagger: `http://localhost:5175`
 - PostgreSQL: `localhost:5432`
@@ -97,6 +129,6 @@ docker compose up -d --build
 backend/        .NET solution projects
 tests/          Unit and integration tests
 frontend/       React storefront
-knowledge-base/ Reserved for the future RAG corpus
+knowledge-base/ Source PDF corpus for RAG ingestion
 docs/           Architecture and operating documentation
 ```

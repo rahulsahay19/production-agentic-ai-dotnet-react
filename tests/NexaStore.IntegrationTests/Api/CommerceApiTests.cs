@@ -152,7 +152,7 @@ public sealed class CommerceApiTests(NexaStoreApiFactory factory) : IClassFixtur
             Assert.True(product.LocalLlmReady);
         });
         Assert.Equal(
-            ["search_products", "get_product_details", "list_product_categories", "check_inventory"],
+            ["search_products", "get_product_details", "list_product_categories", "check_inventory", "search_knowledge_base"],
             names);
     }
 

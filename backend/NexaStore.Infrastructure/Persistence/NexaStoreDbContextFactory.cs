@@ -10,7 +10,7 @@ public sealed class NexaStoreDbContextFactory : IDesignTimeDbContextFactory<Nexa
         var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__NexaStore")
             ?? "Host=localhost;Database=nexastore";
         var options = new DbContextOptionsBuilder<NexaStoreDbContext>()
-            .UseNpgsql(connectionString)
+            .UseNpgsql(connectionString, npgsql => npgsql.UseVector())
             .Options;
 
         return new NexaStoreDbContext(options);

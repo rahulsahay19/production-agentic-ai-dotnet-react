@@ -5,6 +5,7 @@ using NexaStore.Domain.Catalog;
 using NexaStore.Domain.Customers;
 using NexaStore.Domain.Inventory;
 using NexaStore.Domain.Orders;
+using NexaStore.Infrastructure.Knowledge;
 
 namespace NexaStore.Infrastructure.Persistence;
 
@@ -18,17 +19,27 @@ public sealed class NexaStoreDbContext(DbContextOptions<NexaStoreDbContext> opti
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     public DbSet<InventoryItem> Inventory => Set<InventoryItem>();
+    public DbSet<KnowledgeDocument> KnowledgeDocuments => Set<KnowledgeDocument>();
+    public DbSet<KnowledgeChunk> KnowledgeChunks => Set<KnowledgeChunk>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(NexaStoreDbContext).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(
+            typeof(NexaStoreDbContext).Assembly,
+            type => type !=  typeof(KnowledgeDocumentConfiguration)
+                    && type != typeof(KnowledgeChunkConfiguration));
         if (Database.IsNpgsql())
         {
+            modelBuilder.HasPostgresExtension("vector");
+            modelBuilder.ApplyConfiguration(new KnowledgeDocumentConfiguration());
+            modelBuilder.ApplyConfiguration(new KnowledgeChunkConfiguration());
             modelBuilder.Entity<InventoryItem>().Property(item => item.Version).IsRowVersion();
             modelBuilder.Entity<Order>().Property(order => order.Version).IsRowVersion();
         }
         else
         {
+            modelBuilder.Ignore<KnowledgeDocument>();
+            modelBuilder.Ignore<KnowledgeChunk>();
             modelBuilder.Entity<InventoryItem>().Property(item => item.Version).IsConcurrencyToken().ValueGeneratedNever();
             modelBuilder.Entity<Order>().Property(order => order.Version).IsConcurrencyToken().ValueGeneratedNever();
         }

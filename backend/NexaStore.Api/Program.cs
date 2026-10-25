@@ -8,8 +8,9 @@ using NexaStore.Application.Configuration;
 using NexaStore.Infrastructure;
 using NexaStore.Infrastructure.Persistence;
 using NexaStore.Infrastructure.Persistence.Seeding;
-using Serilog;
 using NexaStore.Infrastructure.AI;
+using NexaStore.Infrastructure.Knowledge;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +30,8 @@ builder.Services.AddApplication(commerceOptions);
 builder.Services.AddInfrastructure(connectionString);
 var aiOptions = builder.Configuration.GetSection(AiOptions.SectionName).Get<AiOptions>() ?? new AiOptions();
 builder.Services.AddAi(aiOptions);
+var knowledgeOptions = builder.Configuration.GetSection(KnowledgeOptions.SectionName).Get<KnowledgeOptions>() ?? new();
+builder.Services.AddKnowledge(knowledgeOptions, aiOptions);
 builder.Services.Configure<FrontendOptions>(builder.Configuration.GetSection(FrontendOptions.SectionName));
 var frontendOptions = builder.Configuration.GetSection(FrontendOptions.SectionName).Get<FrontendOptions>() ?? new();
 builder.Services.AddCors(options => options.AddPolicy("Frontend", policy =>

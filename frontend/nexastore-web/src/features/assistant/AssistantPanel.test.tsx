@@ -24,6 +24,8 @@ describe("AssistantPanel", () => {
         "cancellation",
         "product-tools",
         "inventory-tools",
+        "rag",
+        "citations",
       ],
       responseStyles: ["concise", "balanced", "detailed"],
     });
@@ -35,7 +37,7 @@ describe("AssistantPanel", () => {
     expect(screen.getByRole("dialog", { name: "Nexa AI assistant" })).toBeInTheDocument();
     expect(await screen.findByText("OpenAI · gpt-5.6-terra")).toBeInTheDocument();
     expect(screen.getByText("Cloud")).toBeInTheDocument();
-    expect(screen.getByText(/search the live NexaStore catalog/i)).toBeInTheDocument();
+    expect(screen.getByText(/answer from NexaStore’s indexed/i)).toBeInTheDocument();
   });
 
   it("does not render while closed", () => {

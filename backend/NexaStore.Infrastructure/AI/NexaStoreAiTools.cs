@@ -3,24 +3,26 @@ using Microsoft.Extensions.Logging;
 using NexaStore.Application.Abstractions;
 using NexaStore.Application.Catalog;
 using NexaStore.Application.Common;
+using NexaStore.Application.Knowledge;
 using System.ComponentModel;
 
 namespace NexaStore.Infrastructure.AI
 {
     public sealed class NexaStoreAiTools(
-        IProductService products,
-        IInventoryService inventory,
-        AiToolActivityTracker activityTracker,
-        ILogger<NexaStoreAiTools> logger)
+     IProductService products,
+     IInventoryService inventory,
+     IKnowledgeService knowledge,
+     AiToolActivityTracker activityTracker,
+     ILogger<NexaStoreAiTools> logger)
     {
         public IList<AITool> CreateAll() =>
-            [
+        [
             AIFunctionFactory.Create(
-                (Func<string?, string?, string?, decimal?, int?, int?, bool?, bool?, CancellationToken,
+            (Func<string?, string?, string?, decimal?, int?, int?, bool?, bool?, CancellationToken,
                 Task<ProductSearchToolResult>>)SearchProductsAsync,
             name: "search_products",
             description: "Search the live NexaStore product catalog using optional purchasing requirements."),
-            AIFunctionFactory.Create(
+        AIFunctionFactory.Create(
             (Func<Guid, CancellationToken, Task<ProductDetailsLookupToolResult>>)GetProductDetailsAsync,
             name: "get_product_details",
             description: "Get current specifications, capabilities, price, and stock for one product ID returned by search_products."),
@@ -31,8 +33,12 @@ namespace NexaStore.Infrastructure.AI
         AIFunctionFactory.Create(
             (Func<Guid, int, CancellationToken, Task<InventoryToolResult>>)CheckInventoryAsync,
             name: "check_inventory",
-            description: "Check whether a requested quantity of a product is currently available. Use a product ID returned by search_products.")
-            ];
+            description: "Check whether a requested quantity of a product is currently available. Use a product ID returned by search_products."),
+        AIFunctionFactory.Create(
+            (Func<string, int, CancellationToken, Task<KnowledgeSearchToolResult>>)SearchKnowledgeAsync,
+            name: "search_knowledge_base",
+            description: "Search NexaStore PDFs for policies, support guidance, buying advice, customer programs, product manuals, and catalogues. Cite returned sources as [title, p. page].")
+        ];
 
         [Description("Search the live NexaStore product catalog using optional purchasing requirements.")]
         public async Task<ProductSearchToolResult> SearchProductsAsync(
@@ -48,23 +54,25 @@ namespace NexaStore.Infrastructure.AI
         {
             if (maximumPrice < 0 || minimumRamGb < 0 || minimumVramGb < 0)
             {
-                return new ProductSearchToolResult(0, [], "Price, RAM, and VRAM filters cannot be negative.");
+                return new ProductSearchToolResult(
+                    0,
+                    [],
+                    "Price, RAM, and VRAM filters cannot be negative.");
             }
 
             var result = await products.GetProductsAsync(new ProductSearchRequest(
-            Keyword: Normalize(keyword),
-            Category: Normalize(category),
-            Brand: Normalize(brand),
-            MaximumPrice: maximumPrice,
-            MinimumRamGb: minimumRamGb,
-            MinimumVramGb: minimumVramGb,
-            AiReady: aiReady,
-            LocalLlmReady: localLlmReady,
-            PageSize: 5), cancellationToken);
+                Keyword: Normalize(keyword),
+                Category: Normalize(category),
+                Brand: Normalize(brand),
+                MaximumPrice: maximumPrice,
+                MinimumRamGb: minimumRamGb,
+                MinimumVramGb: minimumVramGb,
+                AiReady: aiReady,
+                LocalLlmReady: localLlmReady,
+                PageSize: 5), cancellationToken);
 
             activityTracker.Record("search_products", "Searched the live product catalog");
             logger.LogInformation("AI tool search_products returned {Count} of {Total} products", result.Items.Count, result.TotalCount);
-
 
             return new ProductSearchToolResult(
                 result.TotalCount,
@@ -85,8 +93,8 @@ namespace NexaStore.Infrastructure.AI
 
         [Description("Get current product details for an ID returned by search_products.")]
         public async Task<ProductDetailsLookupToolResult> GetProductDetailsAsync(
-        [Description("The product ID returned by search_products.")] Guid productId,
-        CancellationToken cancellationToken = default)
+            [Description("The product ID returned by search_products.")] Guid productId,
+            CancellationToken cancellationToken = default)
         {
             try
             {
@@ -160,14 +168,39 @@ namespace NexaStore.Infrastructure.AI
             }
         }
 
-        private static string? Normalize(string? value)
-            => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        [Description("Search the indexed NexaStore PDF knowledge base and return source-grounded passages.")]
+        public async Task<KnowledgeSearchToolResult> SearchKnowledgeAsync(
+            [Description("A focused semantic search query describing the information needed.")] string query,
+            [Description("Number of passages to return, from 1 through 8.")] int limit = 5,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                return new KnowledgeSearchToolResult([], "A search query is required.");
+            }
+
+            var results = await knowledge.SearchAsync(query, Math.Clamp(limit, 1, 8), cancellationToken);
+            activityTracker.Record("search_knowledge_base", "Searched the indexed NexaStore documents");
+            logger.LogInformation("AI tool search_knowledge_base returned {Count} passages", results.Count);
+            return new KnowledgeSearchToolResult(
+                results.Select(result => new KnowledgePassageToolResult(
+                    result.DocumentTitle,
+                    result.Category,
+                    result.SourcePath,
+                    result.PageNumber,
+                    result.Content,
+                    result.Relevance)).ToArray(),
+                results.Count == 0 ? "The knowledge base has no matching indexed passages." : null);
+        }
+
+        private static string? Normalize(string? value) =>
+            string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 
     public sealed record ProductSearchToolResult(
-    int TotalCount,
-    IReadOnlyCollection<ProductSummaryToolResult> Items,
-    string? Error);
+        int TotalCount,
+        IReadOnlyCollection<ProductSummaryToolResult> Items,
+        string? Error);
 
     public sealed record ProductSummaryToolResult(
         Guid ProductId,
@@ -209,4 +242,17 @@ namespace NexaStore.Infrastructure.AI
         bool IsAvailable,
         int QuantityAvailable,
         string? Error);
+
+    public sealed record KnowledgeSearchToolResult(
+        IReadOnlyCollection<KnowledgePassageToolResult> Passages,
+        string? Error);
+
+    public sealed record KnowledgePassageToolResult(
+        string Title,
+        string Category,
+        string SourcePath,
+        int PageNumber,
+        string Content,
+        double Relevance);
+
 }

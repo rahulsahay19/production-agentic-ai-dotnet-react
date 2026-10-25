@@ -20,15 +20,15 @@ import type {
 
 const suggestions = [
   "Show me AI-ready laptops with at least 16 GB VRAM.",
-  "Which products are suitable for running local LLMs?",
-  "What product categories are currently available?",
+  "What hardware does the local LLM guide recommend?",
+  "Summarize the return policy and cite the source.",
 ];
 
 const welcome: AssistantMessage = {
   id: "welcome",
   role: "assistant",
   content:
-    "Hi, I’m Nexa AI. I can search the live NexaStore catalog, inspect product specifications, and check inventory. Cart, order, customer, and policy access is not enabled.",
+    "Hi, I’m Nexa AI. I can search the live catalog, check inventory, and answer from NexaStore’s indexed product, buying-guide, policy, and support documents with citations.",
 };
 
 const responseStyles: { value: AssistantResponseStyle; label: string }[] = [
@@ -311,7 +311,7 @@ export function AssistantPanel({
             )}
           </div>
           <p className="mt-2 text-center text-[10px] text-slate-600">
-            Product and inventory facts use read-only live tools. Other answers may be inaccurate.
+            Live commerce tools and cited knowledge-base documents ground answers.
           </p>
         </form>
       </section>

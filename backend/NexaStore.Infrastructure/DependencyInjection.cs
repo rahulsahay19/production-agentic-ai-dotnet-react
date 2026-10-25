@@ -12,6 +12,8 @@ using OllamaSharp;
 using OpenAI;
 using System.ClientModel;
 using System.ClientModel.Primitives;
+using NexaStore.Application.Knowledge;
+using NexaStore.Infrastructure.Knowledge;
 
 namespace NexaStore.Infrastructure;
 
@@ -89,6 +91,7 @@ public static class DependencyInjection
             {
                 npgsql.MigrationsAssembly(typeof(NexaStoreDbContext).Assembly.FullName);
                 npgsql.EnableRetryOnFailure(5, TimeSpan.FromSeconds(5), null);
+                npgsql.UseVector();
             }));
     }
 
@@ -105,6 +108,37 @@ public static class DependencyInjection
         services.AddScoped<IInventoryRepository, InventoryRepository>();
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<NexaStoreDbContext>());
 
+        return services;
+    }
+
+    public static IServiceCollection AddKnowledge(
+        this IServiceCollection services,
+        KnowledgeOptions options,
+        AiOptions aiOptions)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        options.Validate();
+        var openAi = aiOptions.Providers.OpenAI;
+        if (string.IsNullOrWhiteSpace(openAi.ApiKey))
+        {
+            throw new InvalidOperationException("OpenAI API key is required for knowledge-base embeddings.");
+        }
+
+        services.AddSingleton(options);
+        services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(_ =>
+        {
+            var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(aiOptions.RequestTimeoutSeconds) };
+            var client = new OpenAIClient(
+                new ApiKeyCredential(openAi.ApiKey),
+                new OpenAIClientOptions
+                {
+                    Endpoint = new Uri(openAi.Endpoint),
+                    Transport = new HttpClientPipelineTransport(httpClient)
+                });
+            return client.GetEmbeddingClient(options.EmbeddingModel)
+                .AsIEmbeddingGenerator(options.EmbeddingDimensions);
+        });
+        services.AddScoped<IKnowledgeService, KnowledgeService>();
         return services;
     }
 }

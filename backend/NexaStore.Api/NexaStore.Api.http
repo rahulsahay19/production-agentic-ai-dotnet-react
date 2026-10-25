@@ -4,7 +4,19 @@
 GET {{NexaStore.Api_HostAddress}}/api/assistant/status
 Accept: application/json
 
-### Stream a tool-grounded local Ollama response
+### Knowledge-base status
+GET {{NexaStore.Api_HostAddress}}/api/knowledge/status
+Accept: application/json
+
+### Ingest changed PDF documents (SHA-256 idempotent)
+POST {{NexaStore.Api_HostAddress}}/api/knowledge/ingest
+Accept: application/json
+
+### Semantic vector search
+GET {{NexaStore.Api_HostAddress}}/api/knowledge/search?query=What%20hardware%20is%20recommended%20for%20local%20LLMs%3F&limit=5
+Accept: application/json
+
+### Stream a tool-grounded and RAG-grounded response
 POST {{NexaStore.Api_HostAddress}}/api/assistant/chat/stream
 Content-Type: application/json
 Accept: text/event-stream
@@ -14,7 +26,7 @@ Accept: text/event-stream
   "messages": [
     {
       "role": "user",
-      "content": "Find AI-ready products with at least 64 GB RAM and 16 GB VRAM."
+      "content": "What hardware is recommended for running local LLMs? Cite the source."
     }
   ]
 }
