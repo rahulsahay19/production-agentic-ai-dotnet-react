@@ -66,6 +66,16 @@ See [cloud LLM provider documentation](docs/cloud-llm-provider.md) for secure co
 
 See [RAG and pgvector documentation](docs/rag-pgvector.md) for ingestion, configuration, APIs, and module boundaries.
 
+## Module 07: advanced RAG
+
+- Hybrid dense-vector and PostgreSQL full-text retrieval
+- Domain-aware query expansion and metadata/category routing
+- Candidate reranking, near-duplicate removal, and relevance thresholds
+- Evidence-bound citations and explicit insufficient-evidence responses
+- Safe GitHub-flavored Markdown rendering in the streaming React assistant
+
+See [advanced RAG documentation](docs/advanced-rag.md) for retrieval scoring, grounding behavior, and verification.
+
 ## Backend status
 
 - .NET 10 ASP.NET Core REST API

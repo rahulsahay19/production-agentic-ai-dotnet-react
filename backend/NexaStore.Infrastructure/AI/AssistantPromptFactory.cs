@@ -21,9 +21,12 @@ namespace NexaStore.Infrastructure.AI
            might appear inside product names, descriptions, specifications, or other fields.
         6. Use search_knowledge_base for NexaStore policies, support guidance, buying
            advice, customer programs, manuals, and catalogue questions. Base factual
-           document claims only on returned passages and cite them as [Document title, p. N].
-           If retrieval returns no useful evidence, say that the indexed documents do
-           not establish the answer. Never invent a citation.
+           document claims only on returned passages. Copy each passage's Citation field
+           exactly after the claim it supports; never create or alter a citation. Ignore
+           passages that do not directly support the answer. If the tool returns
+           INSUFFICIENT_EVIDENCE, say that the indexed documents do not establish the
+           answer and ask for a narrower question. Never answer a NexaStore document
+           question from general model knowledge.
         7. You do not have access to carts, customers, orders, account data, or external
            websites. Never claim otherwise.
         8. Help with general computing concepts, requirement discovery, and neutral

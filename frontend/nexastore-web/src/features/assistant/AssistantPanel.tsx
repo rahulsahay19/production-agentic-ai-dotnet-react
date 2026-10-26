@@ -17,6 +17,7 @@ import type {
   AssistantResponseStyle,
   AssistantStatus,
 } from "./types";
+import { MarkdownMessage } from "./MarkdownMessage";
 
 const suggestions = [
   "Show me AI-ready laptops with at least 16 GB VRAM.",
@@ -197,7 +198,7 @@ export function AssistantPanel({
                 {message.role === "assistant" ? <Sparkles size={15} /> : <UserRound size={15} />}
               </div>
               <div
-                className={`max-w-[82%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-6 ${
+                className={`max-w-[82%] rounded-2xl px-4 py-3 text-sm leading-6 ${
                   message.role === "user"
                     ? "rounded-tr-sm bg-electric-300 text-ink-950"
                     : "rounded-tl-sm border border-white/8 bg-white/5 text-slate-300"
@@ -212,7 +213,13 @@ export function AssistantPanel({
                     {tool.label}
                   </div>
                 ))}
-                {message.content || (
+                {message.content ? (
+                  message.role === "assistant" ? (
+                    <MarkdownMessage content={message.content} />
+                  ) : (
+                    <span className="whitespace-pre-wrap">{message.content}</span>
+                  )
+                ) : (
                   <span className="inline-flex gap-1 py-2">
                     {[0, 1, 2].map((dot) => (
                       <span key={dot} className="size-1.5 animate-pulse rounded-full bg-electric-300" />

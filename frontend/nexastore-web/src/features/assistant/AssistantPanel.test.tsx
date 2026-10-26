@@ -84,4 +84,20 @@ describe("AssistantPanel", () => {
     expect(await screen.findByText("Searched the live product catalog")).toBeInTheDocument();
     expect(screen.getByText("I found two products.")).toBeInTheDocument();
   });
+
+  it("renders assistant Markdown as semantic HTML", async () => {
+    vi.mocked(streamAssistantResponse).mockImplementation(
+      async (_messages, _responseStyle, onEvent) => {
+        onEvent({ type: "delta", sequence: 0, content: "### Policy summary\n\n- **14 days** for laptops." });
+        onEvent({ type: "done", requestId: "test", chunks: 1, elapsedMs: 50 });
+      },
+    );
+    const user = userEvent.setup();
+    render(<AssistantPanel open onClose={() => undefined} />);
+
+    await user.click(screen.getByRole("button", { name: "Summarize the return policy and cite the source." }));
+
+    expect(await screen.findByRole("heading", { name: "Policy summary", level: 3 })).toBeInTheDocument();
+    expect(screen.getByText("14 days").tagName).toBe("STRONG");
+  });
 });

@@ -9,11 +9,11 @@ using System.ComponentModel;
 namespace NexaStore.Infrastructure.AI
 {
     public sealed class NexaStoreAiTools(
-     IProductService products,
-     IInventoryService inventory,
-     IKnowledgeService knowledge,
-     AiToolActivityTracker activityTracker,
-     ILogger<NexaStoreAiTools> logger)
+    IProductService products,
+    IInventoryService inventory,
+    IKnowledgeService knowledge,
+    AiToolActivityTracker activityTracker,
+    ILogger<NexaStoreAiTools> logger)
     {
         public IList<AITool> CreateAll() =>
         [
@@ -189,8 +189,12 @@ namespace NexaStore.Infrastructure.AI
                     result.SourcePath,
                     result.PageNumber,
                     result.Content,
-                    result.Relevance)).ToArray(),
-                results.Count == 0 ? "The knowledge base has no matching indexed passages." : null);
+                    result.Relevance,
+                    result.RetrievalMethod,
+                    result.Citation)).ToArray(),
+                results.Count == 0
+                    ? "INSUFFICIENT_EVIDENCE: no passage met the configured grounding threshold. Say that the indexed documents do not establish the answer."
+                    : null);
         }
 
         private static string? Normalize(string? value) =>
@@ -253,6 +257,9 @@ namespace NexaStore.Infrastructure.AI
         string SourcePath,
         int PageNumber,
         string Content,
-        double Relevance);
+        double Relevance,
+        string RetrievalMethod,
+        string Citation);
+
 
 }

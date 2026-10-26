@@ -1,10 +1,13 @@
 import { Bot, Menu, Search, ShoppingBag, UserRound, X } from "lucide-react";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { Logo } from "@/components/ui/Logo";
-import { AssistantPanel } from "@/features/assistant/AssistantPanel";
 import { useCart } from "@/features/cart/queries";
 import { cn } from "@/lib/cn";
+
+const AssistantPanel = lazy(() =>
+  import("@/features/assistant/AssistantPanel").then((module) => ({ default: module.AssistantPanel })),
+);
 
 const links = [
   ["Shop", "/products"],
@@ -107,7 +110,11 @@ export function Header() {
           </nav>
         )}
       </header>
-      <AssistantPanel open={ai} onClose={() => setAi(false)} />
+      {ai && (
+        <Suspense fallback={null}>
+          <AssistantPanel open onClose={() => setAi(false)} />
+        </Suspense>
+      )}
     </>
   );
 }

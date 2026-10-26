@@ -130,19 +130,32 @@ namespace NexaStore.Infrastructure.Knowledge
             return new KnowledgeIngestionResult(files.Length, ingested, skipped, removed, createdChunks);
         }
         public async Task<IReadOnlyCollection<KnowledgeSearchResult>> SearchAsync(
-            string query,
-            int limit = 5,
-            CancellationToken cancellationToken = default)
+        string query,
+        int limit = 5,
+        CancellationToken cancellationToken = default)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(query);
             limit = Math.Clamp(limit, 1, 20);
+            var normalizedQuery = query.Trim();
             var generated = await embeddings.GenerateAsync(
-                query.Trim(),
+                normalizedQuery,
                 new EmbeddingGenerationOptions { ModelId = options.EmbeddingModel, Dimensions = options.EmbeddingDimensions },
                 cancellationToken);
-            var queryVector = new Vector(generated.Vector.ToArray());
 
-            return await dbContext.KnowledgeChunks
+            //Semantic Search
+            var queryVector = new Vector(generated.Vector.ToArray());
+            //Decides how many candidates to fetch
+            var candidateLimit = Math.Clamp(limit * options.CandidateMultiplier, 10, 100);
+
+            var category = InferCategory(normalizedQuery);
+            var vectorQuery = dbContext.KnowledgeChunks.AsNoTracking();
+            if (category is not null)
+            {
+                vectorQuery = vectorQuery.Where(chunk => chunk.Document.Category == category);
+            }
+
+            // Semantic Search
+            var semantic = await vectorQuery
                 .AsNoTracking()
                 .Select(chunk => new
                 {
@@ -150,17 +163,142 @@ namespace NexaStore.Infrastructure.Knowledge
                     Distance = chunk.Embedding.CosineDistance(queryVector)
                 })
                 .OrderBy(result => result.Distance)
-                .Take(limit)
-                .Select(result => new KnowledgeSearchResult(
+                .Take(candidateLimit)
+                .Select(result => new SearchCandidate(
                     result.Chunk.Id,
                     result.Chunk.Document.Title,
                     result.Chunk.Document.Category,
                     result.Chunk.Document.SourcePath,
                     result.Chunk.PageNumber,
                     result.Chunk.Content,
-                    1d - result.Distance))
+                    1d - result.Distance,
+                    0d))
                 .ToArrayAsync(cancellationToken);
+
+            //Keyword Search
+            var lexicalText = ExpandQuery(normalizedQuery);
+            var lexicalTsQuery = string.Join(" | ", Tokenize(lexicalText));
+            var lexicalQuery = dbContext.KnowledgeChunks.AsNoTracking();
+            if (category is not null)
+            {
+                lexicalQuery = lexicalQuery.Where(chunk => chunk.Document.Category == category);
+            }
+
+            // PostgreSQL Full-Text Search
+            SearchCandidate[] lexical = lexicalTsQuery.Length == 0
+                ? []
+                : await lexicalQuery
+                    .Where(chunk => EF.Functions.ToTsVector("english", chunk.Content)
+                        .Matches(EF.Functions.ToTsQuery("english", lexicalTsQuery)))
+                    .Select(chunk => new
+                    {
+                        Chunk = chunk,
+                        Score = EF.Functions.ToTsVector("english", chunk.Content)
+                            .RankCoverDensity(EF.Functions.ToTsQuery("english", lexicalTsQuery))
+                    })
+                    .OrderByDescending(candidate => candidate.Score)
+                    .Take(candidateLimit)
+                    .Select(candidate => new SearchCandidate(
+                        candidate.Chunk.Id,
+                        candidate.Chunk.Document.Title,
+                        candidate.Chunk.Document.Category,
+                        candidate.Chunk.Document.SourcePath,
+                        candidate.Chunk.PageNumber,
+                        candidate.Chunk.Content,
+                        0d,
+                        candidate.Score))
+                    .ToArrayAsync(cancellationToken);
+
+            // Normalize the lexical score
+            var maxLexical = lexical.Length == 0 ? 0d : lexical.Max(candidate => candidate.LexicalScore);
+            var terms = Tokenize(normalizedQuery);
+            
+            // Merge semantic + keyword candidates
+            var combined = semantic.Concat(lexical)
+                .GroupBy(candidate => candidate.ChunkId)
+                .Select(group =>
+                {
+                    var candidate = group.First();
+                    var semanticScore = group.Max(item => item.SemanticScore);
+                    var lexicalScore = group.Max(item => item.LexicalScore);
+                    // Calculate query-term coverage
+                    var coverage = CalculateCoverage(candidate.Content, terms);
+                    // Ignore weak lexical matches
+                    var normalizedLexical = maxLexical <= 0 || coverage < 0.4 ? 0 : lexicalScore / maxLexical;
+                    var phraseBoost = candidate.Content.Contains(normalizedQuery, StringComparison.OrdinalIgnoreCase) ? 1d : 0d;
+                    var relevance = (semanticScore * 0.65) + (normalizedLexical * 0.25) + (coverage * 0.08) + (phraseBoost * 0.02);
+                    var method = semanticScore > 0 && lexicalScore > 0 ? "hybrid" : semanticScore > 0 ? "semantic" : "keyword";
+                    return new RankedCandidate(candidate, relevance, method);
+                })
+                .Where(result => result.Relevance >= options.MinimumRelevance)
+                .OrderByDescending(result => result.Relevance)
+                .DistinctBy(result => $"{result.Candidate.SourcePath}|{result.Candidate.PageNumber}|{Fingerprint(result.Candidate.Content)}")
+                .Take(limit)
+                .Select(result => new KnowledgeSearchResult(
+                    result.Candidate.ChunkId,
+                    result.Candidate.DocumentTitle,
+                    result.Candidate.Category,
+                    result.Candidate.SourcePath,
+                    result.Candidate.PageNumber,
+                    result.Candidate.Content,
+                    Math.Min(1d, result.Relevance),
+                    result.Method,
+                    $"[{result.Candidate.DocumentTitle}, p. {result.Candidate.PageNumber}]"))
+                .ToArray();
+
+            logger.LogInformation(
+                "Hybrid knowledge search returned {Count} results from {SemanticCount} semantic and {LexicalCount} keyword candidates (category {Category})",
+                combined.Length,
+                semantic.Length,
+                lexical.Length,
+                category ?? "all");
+            return combined;
         }
+
+        private static string ExpandQuery(string query)
+        {
+            var expansions = new List<string> { query };
+            if (query.Contains("LLM", StringComparison.OrdinalIgnoreCase)) expansions.Add("large language model local AI");
+            if (query.Contains("VRAM", StringComparison.OrdinalIgnoreCase)) expansions.Add("video memory GPU memory");
+            if (query.Contains("return", StringComparison.OrdinalIgnoreCase)) expansions.Add("refund eligibility window");
+            if (query.Contains("warranty", StringComparison.OrdinalIgnoreCase)) expansions.Add("coverage repair replacement");
+            return string.Join(' ', expansions.Distinct(StringComparer.OrdinalIgnoreCase));
+        }
+
+        private static string? InferCategory(string query)
+        {
+            var value = query.ToLowerInvariant();
+            if (ContainsAny(value, "return", "refund", "warranty", "shipping", "delivery", "cancellation", "price match")) return "policies";
+            if (ContainsAny(value, "troubleshoot", "charging", "battery issue", "connectivity", "not working")) return "support";
+            if (ContainsAny(value, "membership", "nexaplus", "rewards", "loyalty")) return "customer-programs";
+            return null;
+        }
+
+        private static bool ContainsAny(string value, params string[] terms) => terms.Any(value.Contains);
+
+        //Converts a question into useful keywords
+        private static string[] Tokenize(string value) => value
+        .Split([' ', ',', '.', '?', '!', ':', ';', '/', '-'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .Where(term => term.Length > 2 && !StopWords.Contains(term))
+        .Select(term => term.ToLowerInvariant())
+        .Distinct()
+        .ToArray();
+
+        //Checking how much of query appears in chunk
+        private static double CalculateCoverage(string content, IReadOnlyCollection<string> terms)
+        {
+            if (terms.Count == 0) return 0;
+            var matches = terms.Count(term => content.Contains(term, StringComparison.OrdinalIgnoreCase));
+            return (double)matches / terms.Count;
+        }
+
+        private static string Fingerprint(string content) =>
+            string.Concat(content.Where(char.IsLetterOrDigit).Take(180)).ToLowerInvariant();
+
+        private static readonly HashSet<string> StopWords = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "the", "and", "for", "from", "with", "what", "which", "does", "are", "this", "that", "how", "can"
+    };
 
         private IEnumerable<PageChunk> ChunkPage(int pageNumber, string text)
         {
@@ -209,5 +347,17 @@ namespace NexaStore.Infrastructure.Knowledge
         {
             public string Text => Content;
         }
+
+        private sealed record SearchCandidate(
+        Guid ChunkId,
+        string DocumentTitle,
+        string Category,
+        string SourcePath,
+        int PageNumber,
+        string Content,
+        double SemanticScore,
+        double LexicalScore);
+
+        private sealed record RankedCandidate(SearchCandidate Candidate, double Relevance, string Method);
     }
 }

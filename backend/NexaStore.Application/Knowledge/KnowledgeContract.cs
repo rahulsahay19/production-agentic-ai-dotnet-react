@@ -21,7 +21,9 @@
         string SourcePath,
         int PageNumber,
         string Content,
-        double Relevance);
+        double Relevance,
+        string RetrievalMethod,
+        string Citation);
 
     public interface IKnowledgeService
     {
