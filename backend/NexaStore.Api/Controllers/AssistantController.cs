@@ -19,7 +19,7 @@ public sealed class AssistantController(
         options.Enabled,
         options.Provider,
         options.SelectedProvider.Model,
-        ["chat", "prompt-styles", "streaming", "cancellation", "product-tools", "inventory-tools", "hybrid-rag", "grounding-threshold", "citations", "markdown"],
+        ["chat", "prompt-styles", "streaming", "cancellation", "mcp", "mcp-tool-discovery", "product-tools", "inventory-tools", "hybrid-rag", "grounding-threshold", "citations", "markdown"],
         AssistantResponseStyles.All));
 
     [HttpPost("chat/stream")]

@@ -72,6 +72,10 @@ services:
       Knowledge__EmbeddingDimensions: ${OPENAI_EMBEDDING_DIMENSIONS:-1536}
       Knowledge__CandidateMultiplier: ${RAG_CANDIDATE_MULTIPLIER:-4}
       Knowledge__MinimumRelevance: ${RAG_MINIMUM_RELEVANCE:-0.35}
+      Mcp__Enabled: ${MCP_ENABLED:-true}
+      Mcp__UseForAssistant: ${MCP_USE_FOR_ASSISTANT:-true}
+      Mcp__ServerUrl: ${MCP_SERVER_URL:-http://localhost:8080/mcp}
+      Mcp__ConnectionTimeoutSeconds: ${MCP_CONNECTION_TIMEOUT_SECONDS:-15}
     volumes:
       - ./knowledge-base:/app/knowledge-base:ro
     ports:

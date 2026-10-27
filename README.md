@@ -8,8 +8,9 @@ The current application combines the conventional commerce foundation with a
 provider-selectable conversational AI integration. OpenAI is the cloud-first
 default and Ollama remains available as a local fallback. The
 assistant can query public commerce data through read-only tools and retrieve
-source-grounded answers from a PostgreSQL/pgvector knowledge base. MCP and
-agents remain intentionally reserved for later modules.
+source-grounded answers from a PostgreSQL/pgvector knowledge base. The same
+read-only capabilities are now published and consumed through the Model
+Context Protocol (MCP); autonomous agents remain reserved for later modules.
 
 ## Module 02: local LLM
 
@@ -76,6 +77,17 @@ See [RAG and pgvector documentation](docs/rag-pgvector.md) for ingestion, config
 
 See [advanced RAG documentation](docs/advanced-rag.md) for retrieval scoring, grounding behavior, and verification.
 
+## Module 08: Model Context Protocol (MCP)
+
+- Official MCP .NET SDK with Streamable HTTP transport at `/mcp`
+- Runtime discovery of product, inventory, category, and knowledge tools
+- A read-only `nexastore://capabilities` resource for client orientation
+- Explicit tool allowlisting and fail-closed discovery validation
+- MCP-backed assistant execution without coupling prompts to implementations
+- Protocol-level integration coverage for discovery and tool invocation
+
+See [MCP documentation](docs/mcp.md) for architecture, configuration, client testing, and module boundaries.
+
 ## Backend status
 
 - .NET 10 ASP.NET Core REST API
@@ -130,6 +142,7 @@ another migration for an already-created schema change.
 
 - Storefront: `http://localhost:5173`
 - API and Swagger: `http://localhost:5175`
+- MCP Streamable HTTP endpoint: `http://localhost:5175/mcp`
 - PostgreSQL: `localhost:5432`
 - Ollama (optional profile): `http://localhost:11434`
 

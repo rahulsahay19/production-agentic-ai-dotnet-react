@@ -4,6 +4,10 @@
 GET {{NexaStore.Api_HostAddress}}/api/assistant/status
 Accept: application/json
 
+### MCP status and allowlisted capabilities
+GET {{NexaStore.Api_HostAddress}}/api/mcp/status
+Accept: application/json
+
 ### Knowledge-base status
 GET {{NexaStore.Api_HostAddress}}/api/knowledge/status
 Accept: application/json

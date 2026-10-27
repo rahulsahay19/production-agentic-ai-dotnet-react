@@ -10,6 +10,7 @@ using NexaStore.Infrastructure.Persistence;
 using NexaStore.Infrastructure.Persistence.Seeding;
 using NexaStore.Infrastructure.AI;
 using NexaStore.Infrastructure.Knowledge;
+using NexaStore.Infrastructure.Mcp;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -32,6 +33,15 @@ var aiOptions = builder.Configuration.GetSection(AiOptions.SectionName).Get<AiOp
 builder.Services.AddAi(aiOptions);
 var knowledgeOptions = builder.Configuration.GetSection(KnowledgeOptions.SectionName).Get<KnowledgeOptions>() ?? new();
 builder.Services.AddKnowledge(knowledgeOptions, aiOptions);
+var mcpOptions = builder.Configuration.GetSection(McpOptions.SectionName).Get<McpOptions>() ?? new();
+builder.Services.AddMcpToolDiscovery(mcpOptions);
+if(mcpOptions.Enabled)
+{
+    builder.Services.AddMcpServer()
+        .WithHttpTransport()
+        .WithTools<NexaStoreMcpTools>()
+        .WithResources<NexaStoreMcpResources>();
+}
 builder.Services.Configure<FrontendOptions>(builder.Configuration.GetSection(FrontendOptions.SectionName));
 var frontendOptions = builder.Configuration.GetSection(FrontendOptions.SectionName).Get<FrontendOptions>() ?? new();
 builder.Services.AddCors(options => options.AddPolicy("Frontend", policy =>
@@ -83,6 +93,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseAuthorization();
 app.MapControllers();
+if(mcpOptions.Enabled)
+{
+    app.MapMcp("/mcp");
+}
 app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
 app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") });
 app.MapHealthChecks("/health");

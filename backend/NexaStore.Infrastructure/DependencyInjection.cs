@@ -14,6 +14,7 @@ using System.ClientModel;
 using System.ClientModel.Primitives;
 using NexaStore.Application.Knowledge;
 using NexaStore.Infrastructure.Knowledge;
+using NexaStore.Infrastructure.Mcp;
 
 namespace NexaStore.Infrastructure;
 
@@ -83,6 +84,21 @@ public static class DependencyInjection
         return services;
     }
 
+    public static IServiceCollection AddMcpToolDiscovery(this IServiceCollection services, McpOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        options.Validate();
+        services.AddSingleton(options);
+        if(options.Enabled && options.UseForAssistant)
+        {
+            services.AddScoped<IAssistantToolProvider, McpAssistantToolProvider>();
+        }
+        else
+        {
+            services.AddScoped<IAssistantToolProvider, LocalAssistantToolProvider>();
+        }
+        return services;
+    }
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, string connectionString)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(connectionString);

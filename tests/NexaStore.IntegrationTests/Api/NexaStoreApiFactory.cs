@@ -34,7 +34,8 @@ public sealed class NexaStoreApiFactory : WebApplicationFactory<Program>, IAsync
                 ["AI:Provider"] = "OpenAI",
                 ["AI:Providers:OpenAI:Endpoint"] = "https://api.openai.com/v1",
                 ["AI:Providers:OpenAI:Model"] = "gpt-5.6-terra",
-                ["AI:Providers:OpenAI:ApiKey"] = "test-key"
+                ["AI:Providers:OpenAI:ApiKey"] = "test-key",
+                ["Mcp:UseForAssistant"] = "false"
             }));
         builder.ConfigureServices(services =>
         {

@@ -8,7 +8,7 @@ namespace NexaStore.Infrastructure.AI
     public sealed class NexaAssistantService(
      IChatClient chatClient,
      AiOptions options,
-     NexaStoreAiTools tools,
+     IAssistantToolProvider toolProvider,
      AiToolActivityTracker activityTracker,
      ILogger<NexaAssistantService> logger) : INexaAssistantService
     {
@@ -33,10 +33,11 @@ namespace NexaStore.Infrastructure.AI
                 options.Provider,
                 messages.Count);
 
+            var availableTools = await toolProvider.GetToolsAsync(cancellationToken);
             var chatOptions = new ChatOptions
             {
                 MaxOutputTokens = options.MaxOutputTokens,
-                Tools = tools.CreateAll()
+                Tools = availableTools
             };
 
             if (string.Equals(options.Provider, AiProviders.Ollama, StringComparison.OrdinalIgnoreCase))

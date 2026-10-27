@@ -8,11 +8,54 @@ using Microsoft.Extensions.DependencyInjection;
 using NexaStore.Infrastructure.AI;
 using Microsoft.Extensions.AI;
 using OpenAI.Responses;
+using Microsoft.Extensions.Logging.Abstractions;
+using ModelContextProtocol.Client;
 
 namespace NexaStore.IntegrationTests.Api;
 
 public sealed class CommerceApiTests(NexaStoreApiFactory factory) : IClassFixture<NexaStoreApiFactory>
 {
+    [Fact]
+    public async Task McpServer_DiscoversAllowlistedToolsAndInvokesProductSearch()
+    {
+        var httpClient = factory.CreateClient();
+        await using var transport = new HttpClientTransport(
+            new HttpClientTransportOptions
+            {
+                Endpoint = new Uri(httpClient.BaseAddress!, "/mcp"),
+                Name = "NexaStore integration test"
+            },
+            httpClient,
+            NullLoggerFactory.Instance,
+            ownsHttpClient: false);
+        await using var client = await McpClient.CreateAsync(
+            transport,
+            loggerFactory: NullLoggerFactory.Instance,
+            cancellationToken: CancellationToken.None);
+
+        var tools = await client.ListToolsAsync(cancellationToken: CancellationToken.None);
+        var names = tools.Select(tool => tool.Name).Order().ToArray();
+
+        Assert.Equal(
+            ["check_inventory", "get_product_details", "list_product_categories", "search_knowledge_base", "search_products"],
+            names);
+        var resources = await client.ListResourcesAsync(cancellationToken: CancellationToken.None);
+        Assert.Contains(resources, resource => resource.Uri == "nexastore://capabilities");
+
+        var search = tools.Single(tool => tool.Name == "search_products");
+        var result = await search.CallAsync(
+            new Dictionary<string, object?>
+            {
+                ["minimumRamGb"] = 64,
+                ["minimumVramGb"] = 16,
+                ["aiReady"] = true
+            },
+            cancellationToken: CancellationToken.None);
+
+        Assert.NotEqual(true, result.IsError);
+        Assert.NotNull(result.StructuredContent);
+    }
+
     [Fact]
     public async Task Search_ReturnsStructuredFilteredProducts()
     {
