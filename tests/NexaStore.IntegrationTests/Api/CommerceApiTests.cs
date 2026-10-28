@@ -132,6 +132,23 @@ public sealed class CommerceApiTests(NexaStoreApiFactory factory) : IClassFixtur
         Assert.Contains("streaming", status.Capabilities);
         Assert.Contains("product-tools", status.Capabilities);
         Assert.Contains("balanced", status.ResponseStyles);
+        Assert.Contains("single-agent", status.Capabilities);
+    }
+
+    [Fact]
+    public async Task AgentProfile_DescribesBoundedSupportAndShoppingAgent()
+    {
+        var client = factory.CreateClient();
+
+        var profile = await client.GetFromJsonAsync<AgentProfileDto>(
+            "/api/assistant/agent",
+            CancellationToken.None);
+
+        Assert.NotNull(profile);
+        Assert.Equal("NexaStore Support & Shopping Agent", profile.Name);
+        Assert.Equal(5, profile.MaximumToolIterations);
+        Assert.Contains(profile.Boundaries, boundary => boundary.Contains("No delegation", StringComparison.Ordinal));
+        Assert.Contains(profile.Boundaries, boundary => boundary.Contains("No cart", StringComparison.Ordinal));
     }
 
     [Fact]

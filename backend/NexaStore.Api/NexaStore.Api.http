@@ -4,6 +4,10 @@
 GET {{NexaStore.Api_HostAddress}}/api/assistant/status
 Accept: application/json
 
+### Single-agent identity, goals, and boundaries
+GET {{NexaStore.Api_HostAddress}}/api/assistant/agent
+Accept: application/json
+
 ### MCP status and allowlisted capabilities
 GET {{NexaStore.Api_HostAddress}}/api/mcp/status
 Accept: application/json

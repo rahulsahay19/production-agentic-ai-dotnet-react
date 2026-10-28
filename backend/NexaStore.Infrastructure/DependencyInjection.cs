@@ -20,11 +20,17 @@ namespace NexaStore.Infrastructure;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddAi(this IServiceCollection services, AiOptions options)
+    public static IServiceCollection AddAi(
+        this IServiceCollection services,
+        AiOptions options,
+        SingleAgentOptions agentOptions)
     {
         ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(agentOptions);
         options.Validate();
+        agentOptions.Validate();
         services.AddSingleton(options);
+        services.AddSingleton(agentOptions);
 
         if (!options.Enabled)
         {
@@ -73,14 +79,14 @@ public static class DependencyInjection
                         client.AllowConcurrentInvocation = false;
                         client.IncludeDetailedErrors = false;
                         client.MaximumConsecutiveErrorsPerRequest = 0;
-                        client.MaximumIterationsPerRequest = 5;
+                        client.MaximumIterationsPerRequest = agentOptions.MaximumToolIterations;
                         client.TerminateOnUnknownCalls = true;
                     })
                 .Build();
         });
         services.AddScoped<AiToolActivityTracker>();
         services.AddScoped<NexaStoreAiTools>();
-        services.AddScoped<INexaAssistantService, NexaAssistantService>();
+        services.AddScoped<INexaAssistantService, NexaStoreSupportShoppingAgent>();
         return services;
     }
 

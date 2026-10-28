@@ -30,7 +30,8 @@ var commerceOptions = builder.Configuration.GetSection(CommerceOptions.SectionNa
 builder.Services.AddApplication(commerceOptions);
 builder.Services.AddInfrastructure(connectionString);
 var aiOptions = builder.Configuration.GetSection(AiOptions.SectionName).Get<AiOptions>() ?? new AiOptions();
-builder.Services.AddAi(aiOptions);
+var agentOptions = builder.Configuration.GetSection(SingleAgentOptions.SectionName).Get<SingleAgentOptions>() ?? new();
+builder.Services.AddAi(aiOptions, agentOptions);
 var knowledgeOptions = builder.Configuration.GetSection(KnowledgeOptions.SectionName).Get<KnowledgeOptions>() ?? new();
 builder.Services.AddKnowledge(knowledgeOptions, aiOptions);
 var mcpOptions = builder.Configuration.GetSection(McpOptions.SectionName).Get<McpOptions>() ?? new();

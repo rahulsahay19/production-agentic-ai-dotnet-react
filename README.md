@@ -88,6 +88,17 @@ See [advanced RAG documentation](docs/advanced-rag.md) for retrieval scoring, gr
 
 See [MCP documentation](docs/mcp.md) for architecture, configuration, client testing, and module boundaries.
 
+## Module 09: single support and shopping agent
+
+- A named `NexaStore Support & Shopping Agent` with explicit goals and boundaries
+- Model-driven intent routing across live commerce tools and grounded documents
+- Bounded observe-decide-act execution through MCP function invocation
+- Mixed workflows that combine support guidance, product matching, and inventory
+- Focused clarification, evidence classification, and deterministic stop rules
+- Read-only operation with no delegation, mutation, or fictional capabilities
+
+See [single-agent documentation](docs/single-agent.md) for the orchestration loop, decision policy, configuration, and testing scenarios.
+
 ## Backend status
 
 - .NET 10 ASP.NET Core REST API

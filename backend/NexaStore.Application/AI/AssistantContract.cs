@@ -18,6 +18,14 @@
         string Model,
         IReadOnlyList<string> Capabilities,
         IReadOnlyList<string> ResponseStyles);
+    public sealed record AgentProfileDto(
+        string Name,
+        string Role,
+        string Orchestration,
+        int MaximumToolIterations,
+        IReadOnlyList<string> Goals,
+        IReadOnlyList<string> Boundaries
+        );
 
     public sealed record AssistantStreamUpdate(
         string Type,
