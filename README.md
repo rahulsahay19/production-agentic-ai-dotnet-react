@@ -17,8 +17,7 @@
 > expose its capabilities through MCP, and evolve it into a production-oriented
 > AI agent—all with modern .NET and React.
 
-NexaStore is a production-oriented .NET 10 modular-monolith e-commerce
-application that evolves incrementally into an agentic AI reference platform.
+A production-oriented .NET 10 Clean Architecture modular monolith that evolves into an agentic AI e-commerce and support platform..
 The current application combines the conventional commerce foundation with a
 provider-selectable conversational AI integration. OpenAI is the cloud-first
 default and Ollama remains available as a local fallback. The
