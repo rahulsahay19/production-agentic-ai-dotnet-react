@@ -1,6 +1,21 @@
 # NexaStore
 
+### Production Agentic AI with .NET 10, React, MCP, and RAG
+
+[![.NET](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=07111f)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-pgvector-4169E1?logo=postgresql&logoColor=white)](https://github.com/pgvector/pgvector)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
+[![MCP](https://img.shields.io/badge/MCP-Streamable_HTTP-7C3AED)](https://modelcontextprotocol.io/)
+
 **Computing for Developers, Creators & AI Builders**
+
+![NexaStore application storefront](docs/images/nexastore-application.png)
+
+> Build a real e-commerce application, ground it with a PDF knowledge base,
+> expose its capabilities through MCP, and evolve it into a production-oriented
+> AI agent—all with modern .NET and React.
 
 NexaStore is a production-oriented .NET 10 modular-monolith e-commerce
 application that evolves incrementally into an agentic AI reference platform.
@@ -9,8 +24,45 @@ provider-selectable conversational AI integration. OpenAI is the cloud-first
 default and Ollama remains available as a local fallback. The
 assistant can query public commerce data through read-only tools and retrieve
 source-grounded answers from a PostgreSQL/pgvector knowledge base. The same
-read-only capabilities are now published and consumed through the Model
-Context Protocol (MCP); autonomous agents remain reserved for later modules.
+read-only capabilities are published and consumed through the Model Context
+Protocol (MCP) by the NexaStore Support & Shopping Agent. Governed multi-agent
+collaboration remains intentionally reserved for Phase 2.
+
+## Phase 1: available now
+
+Phase 1 delivers an end-to-end application rather than an isolated AI demo:
+
+- Production-ready e-commerce foundation with .NET 10, React 19, and PostgreSQL
+- Provider-neutral AI through `Microsoft.Extensions.AI`
+- Local Ollama and cloud OpenAI provider paths
+- Streaming chat, response styles, cancellation, and Markdown rendering
+- Read-only function tools over live catalog and inventory data
+- PDF ingestion, OpenAI embeddings, pgvector, and idempotent indexing
+- Hybrid retrieval, reranking, grounding thresholds, and exact citations
+- MCP Streamable HTTP server, tools, resources, discovery, and allowlisting
+- A bounded single Support & Shopping Agent that combines tools with RAG
+- Docker Compose, health checks, migrations, logging, and automated tests
+
+### Application flow
+
+```mermaid
+flowchart LR
+    UI[React storefront and AI assistant]
+    API[.NET 10 API]
+    AGENT[Support & Shopping Agent]
+    MCP[MCP tools and resources]
+    RAG[Hybrid RAG]
+    DB[(PostgreSQL + pgvector)]
+    LLM[OpenAI or Ollama]
+
+    UI -->|REST + SSE| API
+    API --> AGENT
+    AGENT --> LLM
+    AGENT --> MCP
+    MCP --> RAG
+    MCP --> DB
+    RAG --> DB
+```
 
 ## Module 02: local LLM
 
@@ -98,6 +150,27 @@ See [MCP documentation](docs/mcp.md) for architecture, configuration, client tes
 - Read-only operation with no delegation, mutation, or fictional capabilities
 
 See [single-agent documentation](docs/single-agent.md) for the orchestration loop, decision policy, configuration, and testing scenarios.
+
+## Phase 2: coming next
+
+Phase 2 will evolve the validated single-agent system into a governed,
+observable, enterprise-ready multi-agent platform. Planned modules include:
+
+- **JEV decision layer** — explicit judgment, evidence, and verification before consequential actions
+- **Multi-agent orchestration** — specialized Sales, Product, Support, Policy, and Enterprise agents with bounded responsibilities
+- **Memory and state** — short-term context, durable memory, state ownership, retention, and isolation
+- **Human-in-the-loop** — approval gates, escalation, resumable workflows, and safe handling of high-impact operations
+- **AG-UI experiences** — visible agent progress, tool execution, approvals, and richer interactive workflows
+- **Security and safety** — identity, authorization, prompt-injection defence, content safety, secrets, and audit trails
+- **Evaluation and observability** — RAG quality, agent evaluations, traces, metrics, token usage, latency, and cost monitoring
+- **Local production stack** — resilient services, queues, caching, operational controls, and deployment hardening
+- **Azure AI Foundry migration** — move the locally validated provider and agent architecture to Azure
+- **Azure managed services** — managed search, storage, identity, secrets, monitoring, and AI services
+- **AKS production deployment** — container orchestration, scaling, health, resilience, and release strategy
+- **Final Agentic NexaStore** — complete enterprise architecture and end-to-end production demonstration
+
+Phase 2 will be delivered as a deeper continuation; Phase 1 remains a complete,
+runnable application with a meaningful student outcome of its own.
 
 ## Backend status
 
