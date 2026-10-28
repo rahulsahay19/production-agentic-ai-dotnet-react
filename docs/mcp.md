@@ -96,6 +96,14 @@ In the inspector, list tools, list resources, read `nexastore://capabilities`, a
 }
 ```
 
+Successful structured results deliberately include `"error": null`. MCP output schemas
+require constructor-backed record properties to be present even when nullable, so the
+tool contracts force these properties to serialize instead of omitting them.
+
+When debugging a tool call, do not leave Visual Studio paused for a minute: the Inspector
+has a bounded per-request timeout and will cancel the call. Increase the server's
+`requestTimeout` in Inspector settings for breakpoint-heavy sessions, then reconnect.
+
 The existing React assistant is also an end-to-end MCP test. Try:
 
 - `Show me AI-ready laptops with at least 16 GB VRAM.`

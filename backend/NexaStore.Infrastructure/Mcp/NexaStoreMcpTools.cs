@@ -7,25 +7,24 @@ namespace NexaStore.Infrastructure.Mcp
     [McpServerToolType]
     public sealed class NexaStoreMcpTools(NexaStoreAiTools tools)
     {
-        [McpServerTool(Name ="search_products", Title = "Search NexaStore products", ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false,
-            UseStructuredContent = true)]
+        [McpServerTool(Name = "search_products", Title = "Search NexaStore products", ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false, UseStructuredContent = true)]
         [Description("Search the live NexaStore product catalogue using bounded purchasing requirements.")]
         public Task<ProductSearchToolResult> SearchProductsAsync(
-        [Description("Words from the desired product name, description, SKU, or use case.")] string? keyword = null,
-        [Description("Category name or slug.")] string? category = null,
-        [Description("Brand name.")] string? brand = null,
-        [Description("Maximum price in the listed currency.")] decimal? maximumPrice = null,
-        [Description("Minimum system RAM in GB.")] int? minimumRamGb = null,
-        [Description("Minimum GPU VRAM in GB.")] int? minimumVramGb = null,
-        [Description("Require AI-ready products.")] bool? aiReady = null,
-        [Description("Require local-LLM-ready products.")] bool? localLlmReady = null,
-        CancellationToken cancellationToken = default) =>
-        tools.SearchProductsAsync(keyword, category, brand, maximumPrice, minimumRamGb, minimumVramGb, aiReady, localLlmReady, cancellationToken);
+            [Description("Optional distinctive product name, SKU, brand, or specific use-case term. Do not pass the complete user request, category phrases, or RAM, VRAM, price, and capability requirements here; use their structured parameters instead.")] string? keyword = null,
+            [Description("Category name or slug.")] string? category = null,
+            [Description("Brand name.")] string? brand = null,
+            [Description("Maximum price in the listed currency.")] decimal? maximumPrice = null,
+            [Description("Minimum system RAM in GB.")] int? minimumRamGb = null,
+            [Description("Minimum GPU VRAM in GB.")] int? minimumVramGb = null,
+            [Description("Require AI-ready products.")] bool? aiReady = null,
+            [Description("Require local-LLM-ready products.")] bool? localLlmReady = null,
+            CancellationToken cancellationToken = default) =>
+            tools.SearchProductsAsync(keyword, category, brand, maximumPrice, minimumRamGb, minimumVramGb, aiReady, localLlmReady, cancellationToken);
 
         [McpServerTool(Name = "get_product_details", Title = "Get product details", ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false, UseStructuredContent = true)]
         [Description("Get current specifications, capabilities, price, and stock for one product ID.")]
         public Task<ProductDetailsLookupToolResult> GetProductDetailsAsync(Guid productId, CancellationToken cancellationToken = default) =>
-        tools.GetProductDetailsAsync(productId, cancellationToken);
+            tools.GetProductDetailsAsync(productId, cancellationToken);
 
         [McpServerTool(Name = "list_product_categories", Title = "List product categories", ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false, UseStructuredContent = true)]
         [Description("List the current NexaStore product categories and slugs.")]
@@ -45,4 +44,5 @@ namespace NexaStore.Infrastructure.Mcp
             CancellationToken cancellationToken = default) =>
             tools.SearchKnowledgeAsync(query, limit, cancellationToken);
     }
+
 }

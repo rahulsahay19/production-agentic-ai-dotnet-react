@@ -26,7 +26,9 @@ export async function streamAssistantResponse(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      messages: messages.map(({ role, content }) => ({ role, content })),
+      messages: messages
+        .filter(({ content }) => content.trim().length > 0)
+        .map(({ role, content }) => ({ role, content: content.trim() })),
       responseStyle,
     }),
     signal,

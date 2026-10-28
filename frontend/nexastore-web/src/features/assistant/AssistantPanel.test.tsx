@@ -100,4 +100,34 @@ describe("AssistantPanel", () => {
     expect(await screen.findByRole("heading", { name: "Policy summary", level: 3 })).toBeInTheDocument();
     expect(screen.getByText("14 days").tagName).toBe("STRONG");
   });
+
+  it("removes a failed empty response before retrying", async () => {
+    vi.mocked(streamAssistantResponse)
+      .mockRejectedValueOnce(new Error("Provider failed"))
+      .mockImplementationOnce(async (_messages, _responseStyle, onEvent) => {
+        onEvent({ type: "delta", sequence: 0, content: "Recovered response" });
+        onEvent({ type: "done", requestId: "retry", chunks: 1, elapsedMs: 25 });
+      });
+    const user = userEvent.setup();
+    render(<AssistantPanel open onClose={() => undefined} />);
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Show me AI-ready laptops with at least 16 GB VRAM.",
+      }),
+    );
+    expect(await screen.findByText("Provider failed")).toBeInTheDocument();
+
+    const input = screen.getByPlaceholderText("Ask about developer and AI hardware…");
+    await user.type(input, "Try the search again");
+    await user.click(screen.getByRole("button", { name: "Send message" }));
+
+    expect(await screen.findByText("Recovered response")).toBeInTheDocument();
+    const retryMessages = vi.mocked(streamAssistantResponse).mock.calls[1][0];
+    expect(retryMessages.every((message) => message.content.trim().length > 0)).toBe(true);
+    expect(retryMessages.map((message) => message.content)).toEqual([
+      "Show me AI-ready laptops with at least 16 GB VRAM.",
+      "Try the search again",
+    ]);
+  });
 });

@@ -5,6 +5,7 @@ using NexaStore.Application.Catalog;
 using NexaStore.Application.Common;
 using NexaStore.Application.Knowledge;
 using System.ComponentModel;
+using System.Text.Json.Serialization;
 
 namespace NexaStore.Infrastructure.AI
 {
@@ -42,7 +43,7 @@ namespace NexaStore.Infrastructure.AI
 
         [Description("Search the live NexaStore product catalog using optional purchasing requirements.")]
         public async Task<ProductSearchToolResult> SearchProductsAsync(
-            [Description("Words from the desired product name, description, SKU, or use case.")] string? keyword = null,
+            [Description("Optional distinctive product name, SKU, brand, or specific use-case term. Do not pass the complete user request, category phrases, or RAM, VRAM, price, and capability requirements here; use their structured parameters instead.")] string? keyword = null,
             [Description("Category name or slug, when known.")] string? category = null,
             [Description("Brand name, when requested.")] string? brand = null,
             [Description("Maximum price in the product's listed currency, when the user gives a budget.")] decimal? maximumPrice = null,
@@ -204,7 +205,7 @@ namespace NexaStore.Infrastructure.AI
     public sealed record ProductSearchToolResult(
         int TotalCount,
         IReadOnlyCollection<ProductSummaryToolResult> Items,
-        string? Error);
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.Never)] string? Error);
 
     public sealed record ProductSummaryToolResult(
         Guid ProductId,
@@ -235,8 +236,8 @@ namespace NexaStore.Infrastructure.AI
 
     public sealed record ProductDetailsLookupToolResult(
         bool Found,
-        ProductDetailsToolResult? Product,
-        string? Error);
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.Never)] ProductDetailsToolResult? Product,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.Never)] string? Error);
 
     public sealed record CategoryToolResult(string Name, string Slug, string? Description);
 
@@ -245,11 +246,11 @@ namespace NexaStore.Infrastructure.AI
         int RequestedQuantity,
         bool IsAvailable,
         int QuantityAvailable,
-        string? Error);
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.Never)] string? Error);
 
     public sealed record KnowledgeSearchToolResult(
         IReadOnlyCollection<KnowledgePassageToolResult> Passages,
-        string? Error);
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.Never)] string? Error);
 
     public sealed record KnowledgePassageToolResult(
         string Title,
@@ -260,6 +261,7 @@ namespace NexaStore.Infrastructure.AI
         double Relevance,
         string RetrievalMethod,
         string Citation);
+
 
 
 }

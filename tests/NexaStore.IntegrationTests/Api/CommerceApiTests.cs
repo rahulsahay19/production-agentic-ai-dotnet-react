@@ -10,6 +10,7 @@ using Microsoft.Extensions.AI;
 using OpenAI.Responses;
 using Microsoft.Extensions.Logging.Abstractions;
 using ModelContextProtocol.Client;
+using System.Text.Json;
 
 namespace NexaStore.IntegrationTests.Api;
 
@@ -54,6 +55,11 @@ public sealed class CommerceApiTests(NexaStoreApiFactory factory) : IClassFixtur
 
         Assert.NotEqual(true, result.IsError);
         Assert.NotNull(result.StructuredContent);
+        var structuredContent = Assert.IsType<JsonElement>(result.StructuredContent);
+        Assert.True(structuredContent.TryGetProperty("error", out var error));
+        Assert.Equal(JsonValueKind.Null, error.ValueKind);
+        Assert.True(structuredContent.GetProperty("totalCount").GetInt32() > 0);
+        Assert.NotEmpty(structuredContent.GetProperty("items").EnumerateArray());
     }
 
     [Fact]

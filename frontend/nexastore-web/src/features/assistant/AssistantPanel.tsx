@@ -81,7 +81,12 @@ export function AssistantPanel({
       content,
     };
     const assistantId = crypto.randomUUID();
-    const history = [...messages.filter((message) => message.id !== "welcome"), userMessage];
+    const history = [
+      ...messages.filter(
+        (message) => message.id !== "welcome" && message.content.trim().length > 0,
+      ),
+      userMessage,
+    ];
     setMessages((current) => [
       ...current,
       userMessage,
@@ -137,6 +142,11 @@ export function AssistantPanel({
         );
       }
     } finally {
+      setMessages((current) =>
+        current.filter(
+          (message) => message.id !== assistantId || message.content.trim().length > 0,
+        ),
+      );
       setStreaming(false);
       abortRef.current = null;
     }
