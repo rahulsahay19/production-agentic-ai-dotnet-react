@@ -53,25 +53,18 @@ The `nexastore://capabilities` resource describes the server's purpose, groundin
 }
 ```
 
-Environment variables override these values:
-
-```dotenv
-MCP_ENABLED=true
-MCP_USE_FOR_ASSISTANT=true
-MCP_SERVER_URL=http://localhost:8080/mcp
-MCP_CONNECTION_TIMEOUT_SECONDS=15
-```
-
-The Docker URL uses port `8080` because the assistant calls its own MCP endpoint from inside the API container. A client running on the Windows host uses `http://localhost:5175/mcp`.
+For the course's local development topology, the API and its MCP endpoint both
+run locally. Keep `Mcp:ServerUrl` set to `http://localhost:5175/mcp`.
 
 Set `MCP_USE_FOR_ASSISTANT=false` to keep publishing the MCP server while temporarily routing the assistant through the in-process tool provider. Set `MCP_ENABLED=false` to disable the MCP endpoint and use local tools.
 
 ## Run and verify
 
-Start the stack:
+Start PostgreSQL, then run the API in Visual Studio and React through Vite as
+described in the local development guide:
 
 ```powershell
-docker compose up -d --build
+docker compose up -d postgres
 ```
 
 Inspect the configured endpoint and allowlist:
@@ -83,7 +76,13 @@ Invoke-RestMethod http://localhost:5175/api/mcp/status
 Open the official protocol inspector:
 
 ```powershell
-npx @modelcontextprotocol/inspector http://localhost:5175/mcp
+npx --yes @modelcontextprotocol/inspector@2.5.0 --web --server-url http://localhost:5175/mcp --transport http --protocol-era legacy
+```
+
+For a terminal-only discovery check:
+
+```powershell
+npx --yes @modelcontextprotocol/inspector@2.5.0 --cli --transport http --server-url http://localhost:5175/mcp --method tools/list
 ```
 
 In the inspector, list tools, list resources, read `nexastore://capabilities`, and invoke `search_products` with:
@@ -102,7 +101,13 @@ tool contracts force these properties to serialize instead of omitting them.
 
 When debugging a tool call, do not leave Visual Studio paused for a minute: the Inspector
 has a bounded per-request timeout and will cancel the call. Increase the server's
-`requestTimeout` in Inspector settings for breakpoint-heavy sessions, then reconnect.
+`requestTimeout` to `300000` milliseconds in Inspector settings for breakpoint-heavy
+sessions, then disconnect and reconnect. Visual Studio may otherwise break on the
+resulting `OperationCanceledException`; cancellation is expected after the client
+abandons a timed-out request.
+
+For the complete PostgreSQL-in-Docker plus local API/frontend workflow, see the
+[local debugging guide](local-development.md).
 
 The existing React assistant is also an end-to-end MCP test. Try:
 

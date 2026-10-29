@@ -29,7 +29,9 @@ knowledge-base/
   06-catalogues/
 ```
 
-The folder is mounted read-only at `/app/knowledge-base` in the API container. Generated chunks and vectors live only in PostgreSQL.
+The source PDFs are needed only during ingestion. After ingestion, generated
+chunks and vectors live in PostgreSQL/pgvector and normal retrieval does not
+read the PDF folder.
 
 ## Configuration
 
@@ -46,19 +48,23 @@ The embedding model and dimension are stored on each document. If either changes
 
 ## Run and ingest
 
-### Docker Compose
+### Local API with PostgreSQL in Docker
+
+This step is optional when the database already contains the ingested corpus.
+To ingest or re-ingest PDFs from a locally running API, temporarily configure
+`Knowledge:RootPath` to the repository's `knowledge-base` directory before
+calling the endpoint.
 
 ```powershell
-docker compose up -d --build
+docker compose up -d postgres
+# Start the API profile in Visual Studio first.
 Invoke-RestMethod -Method Post http://localhost:5175/api/knowledge/ingest
 ```
 
-Docker Compose applies pending EF Core migrations automatically because the API
-container sets `Database__ApplyMigrationsOnStartup=true`. The
-`AddKnowledgeBaseVectors` migration enables the PostgreSQL `vector` extension,
-creates `knowledge_documents` and `knowledge_chunks`, and adds the HNSW cosine
-index. Startup applies migration files already present in the image; it never
-generates new migration source files.
+Apply the committed EF Core migrations manually for a fresh PostgreSQL volume.
+The `AddKnowledgeBaseVectors` migration enables the PostgreSQL `vector`
+extension, creates `knowledge_documents` and `knowledge_chunks`, and adds the
+HNSW cosine index.
 
 ### Migration lifecycle
 
@@ -67,7 +73,7 @@ Creating and applying migrations are intentionally separate operations:
 ```text
 dotnet ef migrations add  -> creates versioned migration source files
 dotnet ef database update -> applies those files to a running database
-docker compose up         -> API automatically applies existing pending migrations
+dotnet ef database update -> applies committed migrations to Docker PostgreSQL
 ```
 
 After intentionally changing the EF model, create the migration once in the

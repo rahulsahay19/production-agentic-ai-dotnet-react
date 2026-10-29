@@ -7,9 +7,14 @@ The NexaStore customer storefront, built with React, TypeScript, Vite, Tailwind 
 The Vite development server proxies `/api` and `/health` to the backend at `http://localhost:5175`.
 
 ```powershell
-npm install
-npm run dev
+npm.cmd install
+npm.cmd run dev
 ```
+
+Use `npm.cmd` in Windows PowerShell when the machine's execution policy blocks
+`npm.ps1`. When debugging the API in Visual Studio, stop the Compose frontend
+and API first; otherwise the Nginx frontend proxies to the API container rather
+than the Visual Studio process. See the [local debugging guide](../../docs/local-development.md).
 
 Copy `.env.example` to `.env.local` when the API or demo customer differs from the defaults.
 
@@ -36,14 +41,14 @@ The customer ID defaults to the deterministic development customer seeded by the
 
 ## Local AI assistant
 
-The header's **Ask Nexa AI** action opens a streaming assistant backed by the API's provider-neutral AI service. Users can choose concise, balanced, or detailed prompting, cancel generation, clear the current conversation, and see local generation time. Read-only product and inventory tools provide current commerce facts and every invocation is shown in the conversation. RAG, write operations, customer/order access, and agents are intentionally not enabled yet.
+The header's **Ask Nexa AI** action opens the NexaStore Support & Shopping Agent.
+It streams responses, renders Markdown, supports cancellation and response styles,
+discovers read-only commerce and knowledge tools through MCP, and combines live
+catalogue/inventory data with grounded RAG citations. Cart, order, customer, and
+other write operations remain outside the agent's capability boundary.
 
-## Docker
+## Development topology
 
-From the repository root, start the complete stack with:
-
-```powershell
-docker compose up -d --build
-```
-
-The production frontend is served by Nginx at `http://localhost:5173`. Nginx handles SPA route fallback and proxies `/api` to the API container over the internal Compose network.
+Run PostgreSQL/pgvector in Docker, the API in Visual Studio, and this React
+application through the local Vite server. Vite proxies `/api` to
+`http://localhost:5175`, allowing requests to reach API breakpoints directly.

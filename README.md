@@ -17,7 +17,8 @@
 > expose its capabilities through MCP, and evolve it into a production-oriented
 > AI agent—all with modern .NET and React.
 
-A production-oriented .NET 10 Clean Architecture modular monolith that evolves into an agentic AI e-commerce and support platform..
+NexaStore is a production-oriented .NET 10 modular-monolith e-commerce
+application that evolves incrementally into an agentic AI reference platform.
 The current application combines the conventional commerce foundation with a
 provider-selectable conversational AI integration. OpenAI is the cloud-first
 default and Ollama remains available as a local fallback. The
@@ -197,21 +198,44 @@ See [backend documentation](docs/backend.md) for configuration and execution.
 
 See [frontend documentation](frontend/nexastore-web/README.md) for setup and quality commands.
 
-## Run the complete stack
+## Run the application locally
 
-```powershell
-docker compose up -d --build
+For the development workflow used in the course, keep only PostgreSQL in
+Docker and run both application processes locally:
+
+```text
+Local React/Vite :5173
+        ↓ /api proxy
+Visual Studio API :5175
+        ↓
+Docker PostgreSQL/pgvector :5432
+
+Visual Studio API :5175
+        ↓ self-hosted MCP client
+http://localhost:5175/mcp
 ```
 
-Docker Compose applies pending EF Core migrations automatically because the API
-container sets `Database__ApplyMigrationsOnStartup=true`. This includes the
-`AddKnowledgeBaseVectors` migration, which enables the PostgreSQL `vector`
-extension and creates the knowledge tables and HNSW index. Compose applies
-existing migration files; it does not generate migrations.
+```powershell
+docker compose stop nexastore-api nexastore-web
+docker compose up -d postgres
+```
 
-When running the API outside Docker, apply the migrations manually from the
-repository root. PostgreSQL must already be running, and the connection must
-include the credentials from `.env`:
+Start the `api` launch profile in Visual Studio, then start React locally:
+
+```powershell
+cd frontend\nexastore-web
+npm.cmd install
+npm.cmd run dev
+```
+
+Visual Studio does not automatically import the repository `.env` file. Store
+the local database connection and OpenAI key with .NET user secrets. See the
+[complete local debugging guide](docs/local-development.md) for first-run
+migrations, secrets, MCP Inspector, breakpoint timeout guidance, and common
+Docker/local routing mistakes.
+
+For a fresh PostgreSQL volume, apply the committed migrations manually from the
+repository root. PostgreSQL must already be running:
 
 ```powershell
 docker compose up -d postgres
@@ -227,7 +251,6 @@ another migration for an already-created schema change.
 - API and Swagger: `http://localhost:5175`
 - MCP Streamable HTTP endpoint: `http://localhost:5175/mcp`
 - PostgreSQL: `localhost:5432`
-- Ollama (optional profile): `http://localhost:11434`
 
 ## Repository
 

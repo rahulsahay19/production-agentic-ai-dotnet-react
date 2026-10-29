@@ -31,16 +31,18 @@ Health endpoints:
 - `/health/ready` verifies PostgreSQL connectivity.
 - `/health` retains the combined health endpoint.
 
-## Run with Docker
+## Run locally with PostgreSQL in Docker
 
-Copy `.env.example` to `.env`, replace the development password, then run:
+Copy `.env.example` to `.env`, replace the development password, start only
+PostgreSQL, and run the API with the Visual Studio `api` profile:
 
 ```powershell
-docker compose up --build
+docker compose up -d postgres
 ```
 
-The API is exposed at `http://localhost:5175`. PostgreSQL data is retained in
-the `nexastore-postgres` named volume.
+The local API is exposed at `http://localhost:5175`. PostgreSQL data is retained
+in the `nexastore-postgres` named volume. See the
+[local development guide](local-development.md) for secrets and migrations.
 
 ## Verification
 

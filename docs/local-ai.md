@@ -2,13 +2,15 @@
 
 Phase 02 introduces conversational AI without RAG, tools, MCP, or agents. NexaStore uses `Microsoft.Extensions.AI.IChatClient` as its provider-neutral boundary and Ollama as the local implementation.
 
-## Start the complete stack
+## Run with the API and frontend locally
 
 ```powershell
-docker compose --profile ollama up -d --build
+docker compose --profile ollama up -d postgres ollama ollama-model
 ```
 
-Set `AI_PROVIDER=Ollama`, `AI_ENDPOINT=http://ollama:11434`, and matching `AI_MODEL`/`OLLAMA_MODEL` values in `.env` when using the Docker profile.
+Run the API from Visual Studio and React through Vite. Configure the local API
+provider as Ollama with endpoint `http://localhost:11434`; `http://ollama:11434`
+is only resolvable by another Compose container.
 
 The first run downloads the configured Ollama image and model, so it can take several minutes. Model data is retained in the `nexastore-ollama` Docker volume.
 
@@ -19,7 +21,8 @@ Services:
 - Ollama API: `http://localhost:11434`
 - PostgreSQL: `localhost:5432`
 
-Open the storefront and select **Ask Nexa AI**. Responses stream from the local model through the ASP.NET Core API and Nginx.
+Open the local Vite storefront and select **Ask Nexa AI**. Responses stream from
+the local model through the locally running ASP.NET Core API.
 
 ## Model configuration
 
@@ -29,10 +32,10 @@ The default model is intentionally moderate for local development:
 OLLAMA_MODEL=qwen3.5:4b
 ```
 
-Change `OLLAMA_MODEL` in the root `.env`, then recreate the model initializer and API:
+Change `OLLAMA_MODEL` in the root `.env`, then recreate the model initializer:
 
 ```powershell
-docker compose up -d --force-recreate ollama-model nexastore-api
+docker compose --profile ollama up -d --force-recreate ollama-model
 ```
 
 Select a model that fits the machine. Larger models generally improve responses but require more memory and are slower without GPU acceleration.
@@ -46,8 +49,12 @@ When the API runs from Visual Studio or `dotnet run`, it uses:
   "AI": {
     "Enabled": true,
     "Provider": "Ollama",
-    "Endpoint": "http://localhost:11434",
-    "Model": "qwen3.5:4b"
+    "Providers": {
+      "Ollama": {
+        "Endpoint": "http://localhost:11434",
+        "Model": "qwen3.5:4b"
+      }
+    }
   }
 }
 ```
