@@ -43,6 +43,8 @@ Phase 1 delivers an end-to-end application rather than an isolated AI demo:
 - A bounded single Support & Shopping Agent that combines tools with RAG
 - Docker Compose, health checks, migrations, logging, and automated tests
 
+[![Udemy Course](https://img.shields.io/badge/Udemy-Course-A435F0?style=for-the-badge&logo=udemy&logoColor=white)](https://www.udemy.com/course/agentic-ai-with-dotnet/?couponCode=LAUNCH-OFFER)
+
 ### Application flow
 
 ```mermaid
