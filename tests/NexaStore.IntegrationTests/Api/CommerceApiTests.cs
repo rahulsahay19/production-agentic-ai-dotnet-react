@@ -205,6 +205,11 @@ public sealed class CommerceApiTests(NexaStoreApiFactory factory) : IClassFixtur
         Assert.Contains("event: tool", body);
         Assert.Contains("event: governance", body);
         Assert.Contains("event: verification", body);
+        Assert.Contains("\"route\":", body);
+        Assert.Contains("\"evidenceRequirement\":", body);
+        Assert.Contains("\"passed\":true", body);
+        Assert.DoesNotContain("\"Route\":", body);
+        Assert.DoesNotContain("\"Passed\":", body);
         Assert.Contains("search_products", body);
         Assert.Contains("Test response", body);
         Assert.Contains("event: done", body);

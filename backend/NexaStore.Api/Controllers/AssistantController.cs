@@ -16,6 +16,9 @@ public sealed class AssistantController(
     JevOptions jevOptions,
     ILogger<AssistantController> logger) : ControllerBase
 {
+    private static readonly JsonSerializerOptions SseJsonOptions =
+        new(JsonSerializerDefaults.Web);
+
     [HttpGet("status")]
     [ProducesResponseType<AssistantStatusDto>(StatusCodes.Status200OK)]
     public ActionResult<AssistantStatusDto> GetStatus() => Ok(new AssistantStatusDto(
@@ -144,8 +147,9 @@ public sealed class AssistantController(
     private async Task WriteEventAsync(string eventName, object payload, CancellationToken cancellationToken)
     {
         await Response.WriteAsync($"event: {eventName}\n", cancellationToken);
-        await Response.WriteAsync($"data: {JsonSerializer.Serialize(payload)}\n\n", cancellationToken);
+        await Response.WriteAsync(
+            $"data: {JsonSerializer.Serialize(payload, SseJsonOptions)}\n\n",
+            cancellationToken);
         await Response.Body.FlushAsync(cancellationToken);
     }
 }
-
