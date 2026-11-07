@@ -2,6 +2,18 @@
 
 ### Production Agentic AI with .NET 10, React, MCP, and RAG
 
+## 🎓 Build This Project Step by Step on Udemy
+
+> **Production Agentic AI with .NET 10** takes you from the e-commerce
+> foundation through tools, RAG, MCP, agent governance, and production-ready
+> agentic architecture using the complete NexaStore implementation.
+
+[![Enroll in the Udemy Course](https://img.shields.io/badge/ENROLL_NOW-Udemy_Course-A435F0?style=for-the-badge&logo=udemy&logoColor=white)](https://www.udemy.com/course/agentic-ai-with-dotnet/?couponCode=95FF08AB8F2CFAE7E4CE)
+
+**[Get the course with the coupon already applied →](https://www.udemy.com/course/agentic-ai-with-dotnet/?couponCode=95FF08AB8F2CFAE7E4CE)**
+
+Coupon code: `95FF08AB8F2CFAE7E4CE`
+
 [![.NET](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=07111f)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
