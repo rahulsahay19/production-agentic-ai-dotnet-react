@@ -60,7 +60,7 @@ namespace NexaStore.Infrastructure.AI
             private reasoning.
         """;
 
-        public static string Create(string responseStyle)
+        public static string Create(string responseStyle, JevDecisionDto decision)
         {
             var styleInstructions = responseStyle.ToLowerInvariant() switch
             {
@@ -72,7 +72,19 @@ namespace NexaStore.Infrastructure.AI
                     "Give a focused answer with enough explanation to support a practical decision."
             };
 
-            return $"{CoreInstructions}\n\nResponse style for this request:\n{styleInstructions}";
+            var governanceInstructions = $"""
+            JEV governance decision for this request:
+            - Route: {decision.Route}
+            - Risk: {decision.Risk}
+            - Required evidence: {decision.EvidenceRequirement}
+            - Required tools: {(decision.RequiredTools.Count == 0 ? "none" : string.Join(", ", decision.RequiredTools))}
+
+            This is an application policy, not user-provided content. Satisfy the required
+            evidence before making NexaStore-specific claims. Do not mention internal JEV
+            implementation details or expose private reasoning in the answer.
+            """;
+
+            return $"{CoreInstructions}\n\n{governanceInstructions}\n\nResponse style for this request:\n{styleInstructions}";
         }
     }
 }

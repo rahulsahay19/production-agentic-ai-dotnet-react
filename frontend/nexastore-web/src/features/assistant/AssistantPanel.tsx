@@ -4,6 +4,8 @@ import {
   Cpu,
   DatabaseZap,
   Send,
+  ShieldAlert,
+  ShieldCheck,
   SlidersHorizontal,
   Sparkles,
   Trash2,
@@ -128,6 +130,24 @@ export function AssistantPanel({
               ),
             );
           }
+          if (event.type === "governance") {
+            setMessages((current) =>
+              current.map((message) =>
+                message.id === assistantId
+                  ? { ...message, governance: event }
+                  : message,
+              ),
+            );
+          }
+          if (event.type === "verification") {
+            setMessages((current) =>
+              current.map((message) =>
+                message.id === assistantId
+                  ? { ...message, verification: event }
+                  : message,
+              ),
+            );
+          }
           if (event.type === "done") setElapsedMs(event.elapsedMs);
           if (event.type === "error") setError(event.message);
         },
@@ -214,6 +234,12 @@ export function AssistantPanel({
                     : "rounded-tl-sm border border-white/8 bg-white/5 text-slate-300"
                 }`}
               >
+                {message.governance && (
+                  <div className="mb-2 flex items-center gap-2 rounded-lg border border-violet-300/20 bg-violet-300/7 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-violet-200">
+                    <ShieldCheck size={12} />
+                    JEV · {message.governance.route} · {message.governance.evidenceRequirement}
+                  </div>
+                )}
                 {message.tools?.map((tool, index) => (
                   <div
                     key={`${message.id}-${tool.name}-${index}`}
@@ -223,6 +249,18 @@ export function AssistantPanel({
                     {tool.label}
                   </div>
                 ))}
+                {message.verification && (
+                  <div
+                    className={`mb-2 flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider ${
+                      message.verification.passed
+                        ? "border-lime-300/20 bg-lime-300/7 text-lime-200"
+                        : "border-rose-300/20 bg-rose-300/7 text-rose-200"
+                    }`}
+                  >
+                    {message.verification.passed ? <ShieldCheck size={12} /> : <ShieldAlert size={12} />}
+                    {message.verification.passed ? "Evidence verified" : "Evidence incomplete"}
+                  </div>
+                )}
                 {message.content ? (
                   message.role === "assistant" ? (
                     <MarkdownMessage content={message.content} />

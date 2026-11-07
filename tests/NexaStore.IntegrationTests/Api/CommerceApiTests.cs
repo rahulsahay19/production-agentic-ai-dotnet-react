@@ -1,16 +1,17 @@
-using System.Net;
-using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc;
-using NexaStore.Application.Cart;
-using NexaStore.Application.Catalog;
-using NexaStore.Application.AI;
-using Microsoft.Extensions.DependencyInjection;
-using NexaStore.Infrastructure.AI;
 using Microsoft.Extensions.AI;
-using OpenAI.Responses;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using ModelContextProtocol.Client;
+using NexaStore.Application.AI;
+using NexaStore.Application.Cart;
+using NexaStore.Application.Catalog;
+using NexaStore.Infrastructure.AI;
+using OpenAI.Responses;
+using System.Net;
+using System.Net.Http.Json;
 using System.Text.Json;
+using static NexaStore.Infrastructure.AI.JevDecisionService;
 
 namespace NexaStore.IntegrationTests.Api;
 
@@ -158,6 +159,22 @@ public sealed class CommerceApiTests(NexaStoreApiFactory factory) : IClassFixtur
     }
 
     [Fact]
+    public async Task JevProfile_DescribesGovernanceAndEvidencePolicies()
+    {
+        var client = factory.CreateClient();
+
+        var profile = await client.GetFromJsonAsync<JevProfileDto>(
+            "/api/assistant/jev",
+            CancellationToken.None);
+
+        Assert.NotNull(profile);
+        Assert.True(profile.Enabled);
+        Assert.Contains(JevRoutes.Restricted, profile.Routes);
+        Assert.Contains(JevEvidence.Combined, profile.EvidencePolicies);
+        Assert.Contains(profile.Enforcement, item => item.Contains("unsupported mutations", StringComparison.Ordinal));
+    }
+
+    [Fact]
 #pragma warning disable OPENAI001 // Verifies the intentionally selected Responses API adapter.
     public void OpenAiProvider_UsesResponsesApiAdapter()
     {
@@ -186,6 +203,8 @@ public sealed class CommerceApiTests(NexaStoreApiFactory factory) : IClassFixtur
         Assert.Contains("\"responseStyle\":\"balanced\"", body);
         Assert.Contains("event: delta", body);
         Assert.Contains("event: tool", body);
+        Assert.Contains("event: governance", body);
+        Assert.Contains("event: verification", body);
         Assert.Contains("search_products", body);
         Assert.Contains("Test response", body);
         Assert.Contains("event: done", body);

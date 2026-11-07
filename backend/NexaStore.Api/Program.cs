@@ -31,12 +31,13 @@ builder.Services.AddApplication(commerceOptions);
 builder.Services.AddInfrastructure(connectionString);
 var aiOptions = builder.Configuration.GetSection(AiOptions.SectionName).Get<AiOptions>() ?? new AiOptions();
 var agentOptions = builder.Configuration.GetSection(SingleAgentOptions.SectionName).Get<SingleAgentOptions>() ?? new();
-builder.Services.AddAi(aiOptions, agentOptions);
+var jevOptions = builder.Configuration.GetSection(JevOptions.SectionName).Get<JevOptions>() ?? new();
+builder.Services.AddAi(aiOptions, agentOptions, jevOptions);
 var knowledgeOptions = builder.Configuration.GetSection(KnowledgeOptions.SectionName).Get<KnowledgeOptions>() ?? new();
 builder.Services.AddKnowledge(knowledgeOptions, aiOptions);
 var mcpOptions = builder.Configuration.GetSection(McpOptions.SectionName).Get<McpOptions>() ?? new();
 builder.Services.AddMcpToolDiscovery(mcpOptions);
-if(mcpOptions.Enabled)
+if (mcpOptions.Enabled)
 {
     builder.Services.AddMcpServer()
         .WithHttpTransport()
@@ -94,7 +95,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseAuthorization();
 app.MapControllers();
-if(mcpOptions.Enabled)
+if (mcpOptions.Enabled)
 {
     app.MapMcp("/mcp");
 }

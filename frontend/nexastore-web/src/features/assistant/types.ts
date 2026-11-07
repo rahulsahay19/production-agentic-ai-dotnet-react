@@ -6,9 +6,27 @@ export type AssistantMessage = {
   role: AssistantRole;
   content: string;
   tools?: AssistantToolActivity[];
+  governance?: JevDecision;
+  verification?: JevVerification;
 };
 
 export type AssistantToolActivity = { name: string; label: string };
+
+export type JevDecision = {
+  route: string;
+  risk: string;
+  evidenceRequirement: string;
+  allowed: boolean;
+  reasonCode: string;
+  requiredTools: string[];
+};
+
+export type JevVerification = {
+  passed: boolean;
+  status: string;
+  evidenceUsed: string[];
+  missingEvidence: string[];
+};
 
 export type AssistantStatus = {
   enabled: boolean;
@@ -27,5 +45,7 @@ export type AssistantStreamEvent =
     }
   | { type: "delta"; sequence: number; content: string }
   | { type: "tool"; name: string; label: string }
+  | ({ type: "governance" } & JevDecision)
+  | ({ type: "verification" } & JevVerification)
   | { type: "done"; requestId: string; chunks: number; elapsedMs: number }
   | { type: "error"; message: string };

@@ -85,6 +85,42 @@ describe("AssistantPanel", () => {
     expect(screen.getByText("I found two products.")).toBeInTheDocument();
   });
 
+  it("shows the JEV route and evidence verification result", async () => {
+    vi.mocked(streamAssistantResponse).mockImplementation(
+      async (_messages, _responseStyle, onEvent) => {
+        onEvent({
+          type: "governance",
+          route: "mixed",
+          risk: "medium",
+          evidenceRequirement: "knowledge-and-live-commerce",
+          allowed: true,
+          reasonCode: "document-and-live-commerce-claims",
+          requiredTools: ["search_knowledge_base", "search_products"],
+        });
+        onEvent({ type: "delta", sequence: 0, content: "Grounded recommendation." });
+        onEvent({
+          type: "verification",
+          passed: true,
+          status: "verified",
+          evidenceUsed: ["search_knowledge_base", "search_products"],
+          missingEvidence: [],
+        });
+        onEvent({ type: "done", requestId: "jev-test", chunks: 1, elapsedMs: 50 });
+      },
+    );
+    const user = userEvent.setup();
+    render(<AssistantPanel open onClose={() => undefined} />);
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "What hardware does the local LLM guide recommend?",
+      }),
+    );
+
+    expect(await screen.findByText(/JEV · mixed · knowledge-and-live-commerce/i)).toBeInTheDocument();
+    expect(screen.getByText("Evidence verified")).toBeInTheDocument();
+  });
+
   it("renders assistant Markdown as semantic HTML", async () => {
     vi.mocked(streamAssistantResponse).mockImplementation(
       async (_messages, _responseStyle, onEvent) => {

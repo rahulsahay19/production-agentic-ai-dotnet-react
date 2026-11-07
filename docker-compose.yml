@@ -66,6 +66,9 @@ services:
       AI__Providers__Ollama__Model: ${OLLAMA_MODEL:-qwen3.5:4b}
       AI__RequestTimeoutSeconds: ${AI_REQUEST_TIMEOUT_SECONDS:-120}
       Agent__MaximumToolIterations: ${AGENT_MAXIMUM_TOOL_ITERATIONS:-5}
+      Jev__Enabled: ${JEV_ENABLED:-true}
+      Jev__BlockUnsupportedMutations: ${JEV_BLOCK_UNSUPPORTED_MUTATIONS:-true}
+      Jev__RequireDocumentCitations: ${JEV_REQUIRE_DOCUMENT_CITATIONS:-true}
       AI__Temperature: "0.3"
       AI__MaxOutputTokens: "800"
       Knowledge__RootPath: /app/knowledge-base

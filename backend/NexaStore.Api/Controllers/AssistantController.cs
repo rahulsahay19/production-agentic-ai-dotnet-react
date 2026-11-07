@@ -1,7 +1,8 @@
-﻿using System.Text.Json;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using NexaStore.Application.AI;
 using NexaStore.Infrastructure.AI;
+using System.Text.Json;
+using static NexaStore.Infrastructure.AI.JevDecisionService;
 
 namespace NexaStore.Api.Controllers;
 
@@ -12,6 +13,7 @@ public sealed class AssistantController(
     INexaAssistantService assistant,
     AiOptions options,
     SingleAgentOptions agentOptions,
+    JevOptions jevOptions,
     ILogger<AssistantController> logger) : ControllerBase
 {
     [HttpGet("status")]
@@ -20,26 +22,40 @@ public sealed class AssistantController(
         options.Enabled,
         options.Provider,
         options.SelectedProvider.Model,
-        ["chat", "prompt-styles", "streaming", "cancellation", "single-agent", "intent-routing", "bounded-tool-loop", "mcp", "mcp-tool-discovery", "product-tools", "inventory-tools", "hybrid-rag", "grounding-threshold", "citations", "markdown"],
+        ["chat", "prompt-styles", "streaming", "cancellation", "single-agent", "intent-routing", "bounded-tool-loop", "jev-governance", "evidence-verification", "policy-enforcement", "mcp", "mcp-tool-discovery", "product-tools", "inventory-tools", "hybrid-rag", "grounding-threshold", "citations", "markdown"],
         AssistantResponseStyles.All));
 
     [HttpGet("agent")]
     [ProducesResponseType<AgentProfileDto>(StatusCodes.Status200OK)]
     public ActionResult<AgentProfileDto> GetAgentProfile() => Ok(new AgentProfileDto(
-      agentOptions.Name,
-      "Read-only customer support and shopping specialist",
-      "Model-driven observe-decide-act loop over allowlisted MCP tools",
-      agentOptions.MaximumToolIterations,
-      [
+        agentOptions.Name,
+        "Read-only customer support and shopping specialist",
+        "Model-driven observe-decide-act loop over allowlisted MCP tools",
+        agentOptions.MaximumToolIterations,
+        [
             "Understand shopping and support needs",
             "Retrieve current commerce and document evidence",
             "Return one practical, grounded answer"
-      ],
-      [
+        ],
+        [
             "No cart, order, customer, account, refund, or other mutations",
             "No delegation to other agents",
             "No unsupported NexaStore claims"
-      ]));
+        ]));
+
+    [HttpGet("jev")]
+    [ProducesResponseType<JevProfileDto>(StatusCodes.Status200OK)]
+    public ActionResult<JevProfileDto> GetJevProfile() => Ok(new JevProfileDto(
+        jevOptions.Enabled,
+        "Deterministic judgment, observed evidence, and post-run verification",
+        JevRoutes.All,
+        JevEvidence.All,
+        [
+            "Blocks unsupported mutations before model execution",
+            "Requires route-specific MCP evidence",
+            "Requires citations for document-grounded claims",
+            "Publishes safe decision and verification summaries without private reasoning"
+        ]));
 
     [HttpPost("chat/stream")]
     [Produces("text/event-stream")]
@@ -63,6 +79,7 @@ public sealed class AssistantController(
             await WriteEventAsync("started", new
             {
                 requestId,
+                agent = agentOptions.Name,
                 model = options.SelectedProvider.Model,
                 responseStyle = request.ResponseStyle
             }, cancellationToken);
@@ -72,6 +89,18 @@ public sealed class AssistantController(
                 request.ResponseStyle,
                 cancellationToken))
             {
+                if (update.Type == "governance" && update.Decision is not null)
+                {
+                    await WriteEventAsync("governance", update.Decision, cancellationToken);
+                    continue;
+                }
+
+                if (update.Type == "verification" && update.Verification is not null)
+                {
+                    await WriteEventAsync("verification", update.Verification, cancellationToken);
+                    continue;
+                }
+
                 if (update.Type == "tool")
                 {
                     await WriteEventAsync("tool", new
@@ -119,3 +148,4 @@ public sealed class AssistantController(
         await Response.Body.FlushAsync(cancellationToken);
     }
 }
+

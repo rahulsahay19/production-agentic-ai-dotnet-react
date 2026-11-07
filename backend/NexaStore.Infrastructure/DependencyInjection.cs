@@ -23,14 +23,18 @@ public static class DependencyInjection
     public static IServiceCollection AddAi(
         this IServiceCollection services,
         AiOptions options,
-        SingleAgentOptions agentOptions)
+        SingleAgentOptions agentOptions,
+        JevOptions jevOptions)
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(agentOptions);
+        ArgumentNullException.ThrowIfNull(jevOptions);
         options.Validate();
         agentOptions.Validate();
+        jevOptions.Validate();
         services.AddSingleton(options);
         services.AddSingleton(agentOptions);
+        services.AddSingleton(jevOptions);
 
         if (!options.Enabled)
         {
@@ -85,6 +89,8 @@ public static class DependencyInjection
                 .Build();
         });
         services.AddScoped<AiToolActivityTracker>();
+        services.AddScoped<JevRunContext>();
+        services.AddSingleton<IJevDecisionService, JevDecisionService>();
         services.AddScoped<NexaStoreAiTools>();
         services.AddScoped<INexaAssistantService, NexaStoreSupportShoppingAgent>();
         return services;
@@ -95,7 +101,7 @@ public static class DependencyInjection
         ArgumentNullException.ThrowIfNull(options);
         options.Validate();
         services.AddSingleton(options);
-        if(options.Enabled && options.UseForAssistant)
+        if (options.Enabled && options.UseForAssistant)
         {
             services.AddScoped<IAssistantToolProvider, McpAssistantToolProvider>();
         }
@@ -103,8 +109,10 @@ public static class DependencyInjection
         {
             services.AddScoped<IAssistantToolProvider, LocalAssistantToolProvider>();
         }
+
         return services;
     }
+
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, string connectionString)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(connectionString);

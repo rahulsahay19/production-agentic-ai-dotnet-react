@@ -25,8 +25,10 @@ default and Ollama remains available as a local fallback. The
 assistant can query public commerce data through read-only tools and retrieve
 source-grounded answers from a PostgreSQL/pgvector knowledge base. The same
 read-only capabilities are published and consumed through the Model Context
-Protocol (MCP) by the NexaStore Support & Shopping Agent. Governed multi-agent
-collaboration remains intentionally reserved for Phase 2.
+Protocol (MCP) by the NexaStore Support & Shopping Agent. A deterministic JEV
+decision layer now governs routing, evidence requirements, and post-response
+verification. Multi-agent collaboration remains intentionally reserved for
+Phase 2.
 
 ## Phase 1: available now
 
@@ -41,6 +43,7 @@ Phase 1 delivers an end-to-end application rather than an isolated AI demo:
 - Hybrid retrieval, reranking, grounding thresholds, and exact citations
 - MCP Streamable HTTP server, tools, resources, discovery, and allowlisting
 - A bounded single Support & Shopping Agent that combines tools with RAG
+- JEV judgment, evidence routing, policy enforcement, and verification
 - Docker Compose, health checks, migrations, logging, and automated tests
 
 ### Application flow
@@ -151,12 +154,23 @@ See [MCP documentation](docs/mcp.md) for architecture, configuration, client tes
 
 See [single-agent documentation](docs/single-agent.md) for the orchestration loop, decision policy, configuration, and testing scenarios.
 
+## Module 10: JEV decision layer
+
+- Deterministic Judgment, Evidence, and Verification around the agent loop
+- Request routes for general, commerce, knowledge, mixed, and restricted work
+- Pre-model blocking of unsupported write operations such as ordering or refunds
+- Route-specific requirements for MCP commerce, inventory, and RAG evidence
+- Observation of successfully completed tools rather than model claims
+- Post-response checks for required evidence, non-empty output, and citations
+- Live governance and verification badges in the React assistant
+
+See [JEV decision-layer documentation](docs/jev-decision-layer.md) for the architecture, enforcement flow, configuration, API contract, and demo scenarios.
+
 ## Phase 2: coming next
 
 Phase 2 will evolve the validated single-agent system into a governed,
 observable, enterprise-ready multi-agent platform. Planned modules include:
 
-- **JEV decision layer** — explicit judgment, evidence, and verification before consequential actions
 - **Multi-agent orchestration** — specialized Sales, Product, Support, Policy, and Enterprise agents with bounded responsibilities
 - **Memory and state** — short-term context, durable memory, state ownership, retention, and isolation
 - **Human-in-the-loop** — approval gates, escalation, resumable workflows, and safe handling of high-impact operations

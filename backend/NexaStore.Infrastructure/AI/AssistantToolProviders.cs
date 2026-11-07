@@ -10,14 +10,21 @@ public interface IAssistantToolProvider
     ValueTask<IList<AITool>> GetToolsAsync(CancellationToken cancellationToken = default);
 }
 
-public sealed class LocalAssistantToolProvider(NexaStoreAiTools tools) : IAssistantToolProvider
+public sealed class LocalAssistantToolProvider(
+    NexaStoreAiTools tools,
+    JevRunContext jevContext) : IAssistantToolProvider
 {
     public ValueTask<IList<AITool>> GetToolsAsync(CancellationToken cancellationToken = default) =>
-        ValueTask.FromResult(tools.CreateAll());
+        ValueTask.FromResult<IList<AITool>>(tools.CreateAll()
+            .Select(tool => tool is AIFunction function
+            ? (AITool)new JevObservedFunction(function, jevContext)
+            : tool)
+            .ToArray());        
 }
 
 public sealed class McpAssistantToolProvider(
     McpOptions options,
+    JevRunContext jevContext,
     ILoggerFactory loggerFactory,
     ILogger<McpAssistantToolProvider> logger) : IAssistantToolProvider, IAsyncDisposable
 {
@@ -51,6 +58,7 @@ public sealed class McpAssistantToolProvider(
             var allowed = options.AllowedTools.ToHashSet(StringComparer.Ordinal);
             _tools = discovered
                 .Where(tool => allowed.Contains(tool.Name))
+                .Select(tool =>(AITool) new JevObservedFunction(tool, jevContext))
                 .Cast<AITool>()
                 .ToArray();
 

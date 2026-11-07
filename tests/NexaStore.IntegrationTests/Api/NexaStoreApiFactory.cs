@@ -6,10 +6,11 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using NexaStore.Application.AI;
 using NexaStore.Infrastructure.Persistence;
 using NexaStore.Infrastructure.Persistence.Seeding;
-using NexaStore.Application.AI;
 using System.Runtime.CompilerServices;
+using static NexaStore.Infrastructure.AI.JevDecisionService;
 
 namespace NexaStore.IntegrationTests.Api;
 
@@ -73,8 +74,20 @@ public sealed class NexaStoreApiFactory : WebApplicationFactory<Program>, IAsync
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
+            yield return AssistantStreamUpdate.GovernanceDecision(new JevDecisionDto(
+                JevRoutes.Commerce,
+                JevRisk.Medium,
+                JevEvidence.LiveCommerce,
+                true,
+                "live-commerce-claim",
+                ["search_products"]));
             yield return AssistantStreamUpdate.Tool("search_products", "Searched the live product catalog");
             yield return AssistantStreamUpdate.Delta("Test response");
+            yield return AssistantStreamUpdate.GovernanceVerification(new JevVerificationDto(
+                true,
+                "verified",
+                ["search_products"],
+                []));
         }
     }
 }
