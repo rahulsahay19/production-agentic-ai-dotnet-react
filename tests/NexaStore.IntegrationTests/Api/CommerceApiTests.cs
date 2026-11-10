@@ -175,6 +175,25 @@ public sealed class CommerceApiTests(NexaStoreApiFactory factory) : IClassFixtur
     }
 
     [Fact]
+    public async Task AgentHarnessProfile_DescribesRuntimeBudgetsAndToolPolicy()
+    {
+        var client = factory.CreateClient();
+
+        var profile = await client.GetFromJsonAsync<AgentHarnessProfileDto>(
+            "/api/assistant/harness",
+            CancellationToken.None);
+
+        Assert.NotNull(profile);
+        Assert.True(profile.Enabled);
+        Assert.Equal(120, profile.MaximumRunDurationSeconds);
+        Assert.Equal(20, profile.MaximumConversationMessages);
+        Assert.Equal(5, profile.MaximumToolIterations);
+        Assert.Contains("search_products", profile.AllowedTools);
+        Assert.Contains(profile.Controls, item => item.Contains("tool allowlisting", StringComparison.Ordinal));
+        Assert.Contains(profile.Controls, item => item.Contains("JEV", StringComparison.Ordinal));
+    }
+
+    [Fact]
 #pragma warning disable OPENAI001 // Verifies the intentionally selected Responses API adapter.
     public void OpenAiProvider_UsesResponsesApiAdapter()
     {

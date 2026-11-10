@@ -48,6 +48,17 @@
         IReadOnlyList<string> EvidencePolicies,
         IReadOnlyList<string> Enforcement);
 
+    public sealed record AgentHarnessProfileDto
+        (
+            bool Enabled,
+            string Strategy,
+            int MaximumRunDurationSeconds,
+            int MaximumConversationMessages,
+            int MaximumToolIterations,
+            IReadOnlyList<string> AllowedTools,
+            IReadOnlyList<string> Controls
+        );
+
     public sealed record AssistantStreamUpdate(
         string Type,
         string? Content = null,

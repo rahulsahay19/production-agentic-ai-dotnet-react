@@ -15,6 +15,7 @@ using System.ClientModel.Primitives;
 using NexaStore.Application.Knowledge;
 using NexaStore.Infrastructure.Knowledge;
 using NexaStore.Infrastructure.Mcp;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace NexaStore.Infrastructure;
 
@@ -24,16 +25,20 @@ public static class DependencyInjection
         this IServiceCollection services,
         AiOptions options,
         SingleAgentOptions agentOptions,
+        AgentHarnessOptions harnessOptions,
         JevOptions jevOptions)
     {
         ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(harnessOptions);
         ArgumentNullException.ThrowIfNull(agentOptions);
         ArgumentNullException.ThrowIfNull(jevOptions);
         options.Validate();
         agentOptions.Validate();
+        harnessOptions.Validate();
         jevOptions.Validate();
         services.AddSingleton(options);
         services.AddSingleton(agentOptions);
+        services.AddSingleton(harnessOptions);
         services.AddSingleton(jevOptions);
 
         if (!options.Enabled)
@@ -91,6 +96,8 @@ public static class DependencyInjection
         services.AddScoped<AiToolActivityTracker>();
         services.AddScoped<JevRunContext>();
         services.AddSingleton<IJevDecisionService, JevDecisionService>();
+        services.AddScoped<IAgentRunObserver, LoggingAgentRunObserver>();
+        services.AddScoped<IAgentHarness, NexaStoreAgentHarness>();
         services.AddScoped<NexaStoreAiTools>();
         services.AddScoped<INexaAssistantService, NexaStoreSupportShoppingAgent>();
         return services;

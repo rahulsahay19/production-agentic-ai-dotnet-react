@@ -39,8 +39,9 @@ source-grounded answers from a PostgreSQL/pgvector knowledge base. The same
 read-only capabilities are published and consumed through the Model Context
 Protocol (MCP) by the NexaStore Support & Shopping Agent. A deterministic JEV
 decision layer now governs routing, evidence requirements, and post-response
-verification. Multi-agent collaboration remains intentionally reserved for
-Phase 2.
+verification. A reusable agent harness now owns execution budgets, run context,
+tool permissions, lifecycle events, and cancellation. Multi-agent collaboration
+remains intentionally reserved for Phase 2.
 
 ## Phase 1: available now
 
@@ -56,6 +57,7 @@ Phase 1 delivers an end-to-end application rather than an isolated AI demo:
 - MCP Streamable HTTP server, tools, resources, discovery, and allowlisting
 - A bounded single Support & Shopping Agent that combines tools with RAG
 - JEV judgment, evidence routing, policy enforcement, and verification
+- A reusable production agent harness with execution budgets and tool policies
 - Docker Compose, health checks, migrations, logging, and automated tests
 
 ### Application flow
@@ -65,6 +67,7 @@ flowchart LR
     UI[React storefront and AI assistant]
     API[.NET 10 API]
     AGENT[Support & Shopping Agent]
+    HARNESS[Agent Harness]
     MCP[MCP tools and resources]
     RAG[Hybrid RAG]
     DB[(PostgreSQL + pgvector)]
@@ -72,8 +75,9 @@ flowchart LR
 
     UI -->|REST + SSE| API
     API --> AGENT
-    AGENT --> LLM
-    AGENT --> MCP
+    AGENT --> HARNESS
+    HARNESS --> LLM
+    HARNESS --> MCP
     MCP --> RAG
     MCP --> DB
     RAG --> DB
@@ -177,6 +181,18 @@ See [single-agent documentation](docs/single-agent.md) for the orchestration loo
 - Live governance and verification badges in the React assistant
 
 See [JEV decision-layer documentation](docs/jev-decision-layer.md) for the architecture, enforcement flow, configuration, API contract, and demo scenarios.
+
+## Module 11: agent harness engineering
+
+- A reusable `IAgentHarness` execution boundary independent of agent identity
+- Typed agent definitions, run requests, run context, and lifecycle events
+- Per-agent tool permissions applied after MCP discovery
+- Run-duration, conversation-size, tool-discovery, and iteration budgets
+- Preflight rejection when JEV-required evidence tools are unavailable
+- Provider-neutral model options, streaming, cancellation, and verification
+- Observer hooks for future tracing, evaluations, AG-UI, and audit pipelines
+
+See [agent harness documentation](docs/agent-harness.md) for the runtime architecture, policies, configuration, extension points, and demo workflow.
 
 ## Phase 2: coming next
 

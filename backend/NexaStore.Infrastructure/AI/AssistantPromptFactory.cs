@@ -60,7 +60,17 @@ namespace NexaStore.Infrastructure.AI
             private reasoning.
         """;
 
-        public static string Create(string responseStyle, JevDecisionDto decision)
+        public static AgentDefinition CreateSupportShoppingDefinition(SingleAgentOptions options) =>
+            new(
+                options.Name,
+                "Read-only customer support and shopping specialist",
+                CoreInstructions,
+                options.EffectiveAllowedTools.ToHashSet(StringComparer.Ordinal)); 
+
+        public static string Create(
+            AgentDefinition agent,
+            string responseStyle,
+            JevDecisionDto decision)
         {
             var styleInstructions = responseStyle.ToLowerInvariant() switch
             {
@@ -84,7 +94,7 @@ namespace NexaStore.Infrastructure.AI
             implementation details or expose private reasoning in the answer.
             """;
 
-            return $"{CoreInstructions}\n\n{governanceInstructions}\n\nResponse style for this request:\n{styleInstructions}";
+            return $"{agent.Instructions}\n\n{governanceInstructions}\n\nResponse style for this request:\n{styleInstructions}";
         }
     }
 }

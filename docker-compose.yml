@@ -64,8 +64,12 @@ services:
       AI__Providers__OpenAI__ApiKey: ${OPENAI_API_KEY:-}
       AI__Providers__Ollama__Endpoint: ${OLLAMA_ENDPOINT:-http://ollama:11434}
       AI__Providers__Ollama__Model: ${OLLAMA_MODEL:-qwen3.5:4b}
-      AI__RequestTimeoutSeconds: ${AI_REQUEST_TIMEOUT_SECONDS:-120}
+      AI__RequestTimeoutSeconds: ${AI_REQUEST_TIMEOUT_SECONDS:-300}
       Agent__MaximumToolIterations: ${AGENT_MAXIMUM_TOOL_ITERATIONS:-5}
+      AgentHarness__Enabled: ${AGENT_HARNESS_ENABLED:-true}
+      AgentHarness__MaximumRunDurationSeconds: ${AGENT_HARNESS_MAXIMUM_RUN_DURATION_SECONDS:-300}
+      AgentHarness__MaximumConversationMessages: ${AGENT_HARNESS_MAXIMUM_CONVERSATION_MESSAGES:-20}
+      AgentHarness__MaximumAvailableTools: ${AGENT_HARNESS_MAXIMUM_AVAILABLE_TOOLS:-20}
       Jev__Enabled: ${JEV_ENABLED:-true}
       Jev__BlockUnsupportedMutations: ${JEV_BLOCK_UNSUPPORTED_MUTATIONS:-true}
       Jev__RequireDocumentCitations: ${JEV_REQUIRE_DOCUMENT_CITATIONS:-true}

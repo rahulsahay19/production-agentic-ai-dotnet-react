@@ -13,6 +13,7 @@ public sealed class AssistantController(
     INexaAssistantService assistant,
     AiOptions options,
     SingleAgentOptions agentOptions,
+    AgentHarnessOptions harnessOptions,
     JevOptions jevOptions,
     ILogger<AssistantController> logger) : ControllerBase
 {
@@ -25,7 +26,7 @@ public sealed class AssistantController(
         options.Enabled,
         options.Provider,
         options.SelectedProvider.Model,
-        ["chat", "prompt-styles", "streaming", "cancellation", "single-agent", "intent-routing", "bounded-tool-loop", "jev-governance", "evidence-verification", "policy-enforcement", "mcp", "mcp-tool-discovery", "product-tools", "inventory-tools", "hybrid-rag", "grounding-threshold", "citations", "markdown"],
+         ["chat", "prompt-styles", "streaming", "cancellation", "single-agent", "agent-harness", "run-context", "execution-budgets", "per-agent-tool-policy", "intent-routing", "bounded-tool-loop", "jev-governance", "evidence-verification", "policy-enforcement", "mcp", "mcp-tool-discovery", "product-tools", "inventory-tools", "hybrid-rag", "grounding-threshold", "citations", "markdown"],
         AssistantResponseStyles.All));
 
     [HttpGet("agent")]
@@ -44,6 +45,24 @@ public sealed class AssistantController(
             "No cart, order, customer, account, refund, or other mutations",
             "No delegation to other agents",
             "No unsupported NexaStore claims"
+        ]));
+
+    [HttpGet("harness")]
+    [ProducesResponseType<AgentHarnessProfileDto>(StatusCodes.Status200OK)]
+    public ActionResult<AgentHarnessProfileDto> GetHarnessProfile() => Ok(new AgentHarnessProfileDto(
+        harnessOptions.Enabled,
+        "Reusable run context and policy-controlled agent execution loop",
+        harnessOptions.MaximumRunDurationSeconds,
+        harnessOptions.MaximumConversationMessages,
+        agentOptions.MaximumToolIterations,
+        agentOptions.EffectiveAllowedTools,
+        [
+            "Per-agent tool allowlisting",
+            "Bounded run duration and conversation size",
+            "Provider-neutral model invocation",
+            "JEV pre-execution governance and post-run evidence verification",
+            "Correlated structured lifecycle logging",
+            "Streaming cancellation propagation"
         ]));
 
     [HttpGet("jev")]

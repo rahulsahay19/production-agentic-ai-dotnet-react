@@ -8,6 +8,10 @@ Accept: application/json
 GET {{NexaStore.Api_HostAddress}}/api/assistant/agent
 Accept: application/json
 
+### Agent harness runtime policy and execution budgets
+GET {{NexaStore.Api_HostAddress}}/api/assistant/harness
+Accept: application/json
+
 ### JEV judgment, evidence, and verification policy
 GET {{NexaStore.Api_HostAddress}}/api/assistant/jev
 Accept: application/json
